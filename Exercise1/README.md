@@ -4,19 +4,21 @@
 
 ## Project Structure
 
-project_root/ 
-├── notebooks/ 
-│ ├── wine.ipynb 
-│ └── soybean.ipynb 
-│ └── ...
-├── src/ 
-│ └── utils.py/ 
-│   └── create_correlation_matrix()
-│   └── create_scatterplot_matrix()
-├── data/ 
-│ └── wine_data/ 
-│   └── wine_data.xlsx
-│ └── ... 
+```
+project_root/
+├── notebooks/
+│   ├── wine.ipynb
+│   ├── soybean.ipynb
+│   └── ...
+├── src/
+│   └── utils.py
+│       ├── create_correlation_matrix()
+│       └── create_scatterplot_matrix()
+├── data/
+│   └── wine_data/
+│       └── wine_data.xlsx
+│   └── ...
+```
 
 ## Importing utils functuons
 
