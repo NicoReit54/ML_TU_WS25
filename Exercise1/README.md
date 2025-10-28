@@ -14,6 +14,7 @@ project_root/
 │   └── utils.py
 │       ├── create_correlation_matrix()
 │       └── create_scatterplot_matrix()
+│       └── create_countplot()
 ├── data/
 │   └── wine_data/
 │       └── wine_data.xlsx
@@ -90,6 +91,29 @@ def create_correlation_matrix(
 
 ```python
 create_correlation_matrix(df.columns.tolist(), df_wine)
+```
+
+---
+### Using `create_countplot`
+
+```python
+def create_countplot(
+        df: pd.DataFrame,
+        x_rotation: int = 45,
+        figsize: tuple = (30, 30)) -> None
+```
+
+### Parameters
+
+- `df`: The DataFrame containing features to visualize. Categorical features will be extracted automatically.
+- `figsize`: Size of the figure.
+- `x_rotation`: Axis label rotation angles.
+
+
+### Example Usage
+
+```python
+create_countplot(df)
 ```
 
 ---
