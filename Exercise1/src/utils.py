@@ -120,3 +120,41 @@ def create_scatterplot_matrix(df: pd.DataFrame,
 
     fig = plt.gcf()  # Get current figure after scatter_matrix
     fig.tight_layout()
+
+
+def create_countplot(
+        df: pd.DataFrame,
+        x_rotation: int = 45,
+        figsize: tuple = (30, 30)) -> None:
+    """
+    Generates a countplot matrix for all categorical columns in a DataFrame.
+
+    Parameters:
+    ----------
+    df : pd.DataFrame
+        The DataFrame containing features to visualize. Categorical features will be extracted automatically
+    figsize : tuple
+        A tuple containing the wished for size of the scatterplot
+    x_rotation: int 
+        Degrees in how the x-axis labels shall be set
+
+    Returns:
+    -------
+    None
+        Displays a countplot matrix of all categorical columns in a given DataFrame.
+    """
+    # extract the categorical values
+    df_categorical = df.select_dtypes(include = 'object').copy()
+
+    cols = df_categorical.columns
+
+    fig, axes = plt.subplots(int(round(len(cols),0)/4), 4 , figsize=figsize)  
+    axes = axes.flatten() # turn into a 1D list for indexing
+
+    for i, col in enumerate(cols):
+        sns.countplot(data=df_categorical, x=col, ax=axes[i])
+        axes[i].set_title(col)
+        axes[i].tick_params(axis='x', labelrotation=x_rotation)
+        axes[i].set_xlabel("") # no label as in titel already
+
+    fig.tight_layout() # for better readability
