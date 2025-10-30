@@ -12,16 +12,22 @@ project_root/
 │   └── ...
 ├── src/
 │   └── utils.py
-│       ├── create_correlation_matrix()
-│       └── create_scatterplot_matrix()
-│       └── create_countplot()
+│   │   ├── create_correlation_matrix()
+│   │   └── create_scatterplot_matrix()
+│   │   └── create_countplot()
+│   └── evaluation.py
+│       ├── evaluate_run()
+│       └── plot_confusion_matrix()
+│       └── plot_metrics()
+│       └── plot_regression_results()
+│       └── plot_residuals()
 ├── data/
 │   └── wine_data/
 │       └── wine_data.xlsx
 │   └── ...
 ```
 
-## Utils functions
+## `utils.py` functions
 
 ### Import 
 
@@ -120,7 +126,7 @@ create_countplot(df)
 
 ---
 
-## Evaluation functions
+## `evaluation.py` functions
 
 This module provides an evaluation framework for both **classification** and **regression** tasks.  
 
