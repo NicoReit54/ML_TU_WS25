@@ -148,7 +148,7 @@ def create_countplot(
 
     cols = df_categorical.columns
 
-    fig, axes = plt.subplots(int(round(len(cols),0)/4), 4 , figsize=figsize)  
+    fig, axes = plt.subplots(int(len(cols)/4), 4 + 1, figsize=figsize)  
     axes = axes.flatten() # turn into a 1D list for indexing
 
     for i, col in enumerate(cols):
