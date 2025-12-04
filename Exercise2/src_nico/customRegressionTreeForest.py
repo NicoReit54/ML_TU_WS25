@@ -75,6 +75,7 @@ class RegressionTreeNico():
             The (weighted) variance of the feature in the given data
         '''
         # TODO: Do this all with numpy and avoid the pandas overhead!
+        
         # prep building blocks for vectorized variance calculation
         grouped_data = data.groupby(which_feature_name)[target_name]
         sizes = grouped_data.size()
