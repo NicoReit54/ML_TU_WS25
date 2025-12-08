@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from collections import defaultdict # for set_params
+
 # for testing and comparison
 import time
 from sklearn.tree import DecisionTreeRegressor
@@ -30,8 +32,10 @@ def dict_depth(dic, level = 1):
     
     return max(dict_depth(dic[key], level + 1)
                                for key in dic)
-    
-class RegressionTreeNico():
+
+from sklearn.base import BaseEstimator, RegressorMixin
+
+class RegressionTreeNico(BaseEstimator, RegressorMixin):
     """
     Custom implementation of a regression decision tree for 
     184.702 Machine Learning (VU 3,0) 2025W
@@ -49,8 +53,6 @@ class RegressionTreeNico():
         Maximum depth of the tree. If None, the tree grows until min_instances is reached
     features: list, optional
         Allows the user to choose only a subsample of the data for the fit
-    categorical_features : list, optional (but actually necessary in case of such)
-        List of feature names that represent categorical features
     alpha: float, optional
         If passed as != 0, this will enable cost-complexity pruning. 
         For more info look into the respective method "_prune_cost_complexity()"
@@ -70,7 +72,6 @@ class RegressionTreeNico():
         self.max_depth = max_depth
         self.max_features = max_features
         self.features_to_choose = features_to_choose
-        self.categorical_features = categorical_features
         self.alpha = alpha
 
     def _calc_MSE(self, Y_true: ArrayLike, Y_pred: ArrayLike) -> np.float64:
@@ -550,7 +551,7 @@ class RegressionTreeNico():
                     "error": self._calc_MSE(data[target_name], np.mean(data[target_name]))
                 }
     
-    def fit(self, data: pd.DataFrame, target_name: str) -> Self:
+    def fit(self, data: pd.DataFrame, target_name: str, categorical_features : list = []) -> Self:
             
         '''
         Creates ("fits") the regression tree to the given dataset.
@@ -561,7 +562,8 @@ class RegressionTreeNico():
             Training dataset containing features AND the target
         target_name : str
             Name of the target column
-
+        categorical_features : list, optional (but actually necessary in case of such)
+            List of feature names that represent categorical features
         Returns
         -------
         Self
@@ -571,19 +573,20 @@ class RegressionTreeNico():
         # to potentially reuse for normalization
         self.dataset_size = len(data)
         self.target_name = target_name
+        self.categorical_features = categorical_features
 
         # make sure we do not loose the target (and differentiate here as we also pass np.ndarray due to the random sampling)
-        if features_to_choose is not None and target_name not in features_to_choose:
-            if isinstance(features_to_choose, pd.DataFrame):
-                features_to_choose.append(target_name)
-            elif isinstance(features_to_choose, ArrayLike):
+        if self.features_to_choose is not None and target_name not in self.features_to_choose:
+            if isinstance(self.features_to_choose, pd.DataFrame):
+                self.features_to_choose.append(target_name)
+            elif isinstance(self.features_to_choose, ArrayLike):
                 #logger.error(f"{features_to_choose}, {type(features_to_choose)}, {target_name}")
-                features_to_choose = np.append(features_to_choose, target_name)
+                self.features_to_choose = np.append(self.features_to_choose, target_name)
 
         # Subsample if wanted
-        if features_to_choose is not None:
+        if self.features_to_choose is not None:
             #logger.error(f"{features_to_choose}, {type(features_to_choose)}")
-            data = data[features_to_choose]
+            data = data[self.features_to_choose]
 
         self.tree_ = self._Classfier(
             data, target_name, categorical_features=self.categorical_features, 
@@ -592,7 +595,7 @@ class RegressionTreeNico():
         
         # start pruning if alpha > 0.0 is passed
         if self.alpha > 0.0:
-            self.tree_ = self._prune_cost_complexity(self.tree_, alpha)
+            self.tree_ = self._prune_cost_complexity(self.tree_, self.alpha)
         return self
         
     def _predict_row(self, X_pred: ArrayLike, tree:dict, features:list, categorical_features: list = []):
@@ -807,7 +810,46 @@ class RegressionTreeNico():
             }
         
         return tree
+    '''
+    def get_params(self, deep=True) -> dict[str, Any]:
+        return {
+            "min_instances": self.min_instances,
+            "max_depth": self.max_depth,
+            "max_features": self.max_features,
+            "features_to_choose": self.features_to_choose,
+            "categorical_features": self.categorical_features,
+            "alpha": self.alpha,
+            "random_state": self.random_state,
+        }
+    
+    def set_params(self, **params) -> Self:
+        """Set the parameters of this estimator.
 
+        The method works on simple estimators as well as on nested objects
+        (such as :class:`~sklearn.pipeline.Pipeline`). The latter have
+        parameters of the form ``<component>__<parameter>`` so that it's
+        possible to update each component of a nested object.
+
+        Parameters
+        ----------
+        **params : dict
+            Estimator parameters.
+
+        Returns
+        -------
+        self : estimator instance
+            Estimator instance.
+        """
+        if not params:
+            # Simple optimization to gain speed (inspect is slow)
+            return self
+
+        for key, value in params.items():
+            key, delim, sub_key = key.partition("__")
+            setattr(self, key, value)
+
+        return self
+    '''
     def print_tree(self, tree: dict = None, depth: int = 0) -> None:
         """
         Recursively prints the regression tree structure
