@@ -63,7 +63,6 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
                  max_depth: int = None,
                  max_features: int = None,
                  features_to_choose: ArrayLike | pd.DataFrame = None,
-                 categorical_features: list = [],
                  alpha: float = 0.0,
                  random_state=None) -> None:
                  
@@ -551,7 +550,12 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
                     "error": self._calc_MSE(data[target_name], np.mean(data[target_name]))
                 }
     
-    def fit(self, data: pd.DataFrame, target_name: str, categorical_features : list = []) -> Self:
+    def fit(self, 
+            X: pd.DataFrame, 
+            y: pd.Series,
+            #data: pd.DataFrame, 
+            #target_name: str, 
+            categorical_features : list = []) -> Self:
             
         '''
         Creates ("fits") the regression tree to the given dataset.
@@ -569,14 +573,19 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         Self
             Stores the learned tree in `self.tree_` of the initialized instance of this class.
         '''
+        # added to comply with GridSearchCV interface
+        data = X.copy()
+        data["_target"] = y
+        self.target_name = "_target"
+        target_name = "_target"
 
         # to potentially reuse for normalization
         self.dataset_size = len(data)
-        self.target_name = target_name
+        #self.target_name = target_name
         self.categorical_features = categorical_features
 
         # make sure we do not loose the target (and differentiate here as we also pass np.ndarray due to the random sampling)
-        if self.features_to_choose is not None and target_name not in self.features_to_choose:
+        if self.features_to_choose is not None and target_name not in list(self.features_to_choose):
             if isinstance(self.features_to_choose, pd.DataFrame):
                 self.features_to_choose.append(target_name)
             elif isinstance(self.features_to_choose, ArrayLike):
@@ -936,8 +945,8 @@ class RandomForestNico():
         self.nr_of_trees = nr_of_trees
 
     def fit(self, 
-            data: pd.DataFrame, 
-            target_name : str,
+            X: pd.DataFrame, 
+            y: pd.Series,
             categorical_features: list = []) -> Self:
         '''
         Fit method for training the randomforest model, based on the custom Regressiontree implementation
@@ -959,16 +968,16 @@ class RandomForestNico():
 
         # Using the parallelized way taken from https://www.geeksforgeeks.org/python/massively-speed-up-processing-using-joblib-in-python/
         random_forest_trees = Parallel(n_jobs=-1)(
-            delayed(RegressionTreeNico(random_state=self.random_state + i).fit) 
+            delayed(RegressionTreeNico(random_state=self.random_state + i,
+                                       min_instances = self.min_instances,
+                                       max_depth = self.max_depth,
+                                       max_features = int(len(X.columns) / 3)).fit) 
             (   
                 # Bootstrap Sampling:
                 # replace=True ensures sampling WITH replacement (i.e. we have some rows duplicated or similar). frac=1 ensures same data lengths as originally
-                data = data.sample(frac=1, replace=True, random_state=self.random_state + i), 
-                target_name = target_name, 
-                min_instances = self.min_instances,
-                max_depth = self.max_depth,
+                X.sample(frac=1, replace=True, random_state=self.random_state + i),
+                y.loc[X.sample(frac=1, replace=True, random_state=self.random_state + i).index],
                 # By passing max_features we trigger the random sampling mechanism in the tree!
-                max_features = int(len(data.columns) / 3),
                 categorical_features=categorical_features
             )
             for i in range(self.nr_of_trees)
