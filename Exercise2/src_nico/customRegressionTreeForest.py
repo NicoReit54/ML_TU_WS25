@@ -164,10 +164,15 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         #y = data[target_name].values
         feature_idx = data.columns.get_loc(which_feature_name)
         target_idx = data.columns.get_loc(target_name)
+
+        #logger.error(data)
         
         data = data.to_numpy()
         X = data[:, feature_idx]
         y = data[:, target_idx]
+
+        #logger.error(X)
+        #logger.error(y)
 
         # sort the data by the feature
         sort_idx = np.argsort(X)
@@ -181,7 +186,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         cum_sum = np.cumsum(y)
         cum_squared_sum = np.cumsum(y**2)
         counts = np.arange(1, len(y) + 1) 
-        
+        #logger.error(f"{y}")
         # e.g. for i = 4
         # + cum_sum = sum up until 4th row
         # + counts = well.. four
@@ -200,6 +205,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         right_sum = total_sum - cum_sum[:-1]
         right_sq_sum = total_squared_sum - cum_squared_sum[:-1]
         right_count = total_count - counts[:-1]
+        right_count[right_count == 0] = 1  # avoid division by zero!!
 
         right_mean = right_sum / right_count
         right_mse = (right_sq_sum / right_count) - right_mean**2
@@ -211,7 +217,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         threshold = (X[1:] + X[:-1]) / 2
 
         best_split = np.argmin(weighted_mse)
-
+        #logger.error(f"{best_split}, {weighted_mse}")
         # return the best wmse as well as the threshold
         return weighted_mse[best_split], threshold[best_split]
 
@@ -370,7 +376,8 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
                 logger.info(f"feature {feature_name} entered continous processing step")
 
                 variance, threshold = self._calc_variance_cont_features(data, target_name, feature_name)
-                                
+                
+                logger.info(f"{variance}, {threshold}")               
                 # if improvement: overwrite values
                 if variance <= best_variance:
                     best_feature = feature_name
@@ -579,8 +586,16 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
             Stores the learned tree in `self.tree_` of the initialized instance of this class.
         '''
         # added to comply with GridSearchCV interface and not mess with the way I used data in the other methods
-        X = pd.DataFrame(X)
-    
+        # also ensure that X is a DataFrame with proper column names and align index with y as scaling might mess with it
+        if not isinstance(X, pd.DataFrame):
+            self.feature_names_ = [f"f{i}" for i in range(X.shape[1])]
+            X = pd.DataFrame(X, columns=self.feature_names_, index=y.index)
+        else:
+            self.feature_names_ = X.columns.tolist()
+
+        # index alignment with y to avoid Nans with out cont_ calc
+        X.index = y.index
+
         data = X.copy()
         data["_target"] = y
         self.target_name = "_target"
@@ -596,12 +611,10 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
             if isinstance(self.features_to_choose, pd.DataFrame):
                 self.features_to_choose.append(target_name)
             elif isinstance(self.features_to_choose, ArrayLike):
-                #logger.error(f"{features_to_choose}, {type(features_to_choose)}, {target_name}")
                 self.features_to_choose = np.append(self.features_to_choose, target_name)
 
         # Subsample if wanted
         if self.features_to_choose is not None:
-            #logger.error(f"{features_to_choose}, {type(features_to_choose)}")
             data = data[self.features_to_choose]
 
         self.tree_ = self._Classfier(
@@ -704,7 +717,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         if not isinstance(X_pred, pd.DataFrame):
             # allow numpy arrays by converting to DataFrame (TODO: At some point make everything numpy based to speed up)
             if isinstance(X_pred, np.ndarray):
-                X_pred = pd.DataFrame(X_pred)
+                X_pred = pd.DataFrame(X_pred, columns=self.feature_names_)
             else:
                 raise ValueError(f"As of now, X_pred needs to be of type pd.DataFrame or np.ndarray. It is of type {type(X_pred)}")
         
