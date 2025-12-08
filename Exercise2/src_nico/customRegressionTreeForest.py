@@ -844,7 +844,7 @@ class RegressionTreeNico():
                     print(f"{indent}--> Value {val} leaf: {branch:.3f}")
 
 class RandomForestNico():
-    '''
+    """
     Custom implementation of a regression decision forest for 
     184.702 Machine Learning (VU 3,0) 2025W
 
@@ -870,17 +870,33 @@ class RandomForestNico():
     https://python-course.eu/machine-learning/random-forests-in-python.php
     As well as the scipy documentation
 
-    '''    
-    def __init__(self, random_state=None) -> None:
+    Parameters
+    -------
+    min_instances : int, optional
+        Minimum number of samples required to allow further splitting, else mean is taken.
+    max_depth : int, optional
+        Maximum depth of the tree. If None, the tree grows until min_instances is reached
+    categorical_features : list, optional (but actually necessary in case of such)
+        List of feature names that represent categorical features
+    nr_of_trees: int
+        Define how many trees shall be fit for the RandomForest
+
+
+    """    
+    def __init__(self, 
+                 random_state=None,
+                 min_instances: int = 2,
+                 max_depth: int = None,
+                 nr_of_trees: int = 10) -> None:
         self.random_state = random_state
+        self.min_instances = min_instances
+        self.max_depth = max_depth           
+        self.nr_of_trees = nr_of_trees
 
     def fit(self, 
             data: pd.DataFrame, 
             target_name : str,
-            min_instances: int = 2,
-            max_depth: int = None,
-            categorical_features: list = [], 
-            nr_of_trees: int = 10) -> Self:
+            categorical_features: list = []) -> Self:
         '''
         Fit method for training the randomforest model, based on the custom Regressiontree implementation
         
@@ -890,14 +906,8 @@ class RandomForestNico():
             Training dataset containing features AND the target
         target_name: str
             Name of the target column
-        min_instances : int, optional
-            Minimum number of samples required to allow further splitting, else mean is taken.
-        max_depth : int, optional
-            Maximum depth of the tree. If None, the tree grows until min_instances is reached
         categorical_features : list, optional (but actually necessary in case of such)
             List of feature names that represent categorical features
-        nr_of_trees: int
-            Define how many trees shall be fit for the RandomForest
 
         Returns
         -------
@@ -913,13 +923,13 @@ class RandomForestNico():
                 # replace=True ensures sampling WITH replacement (i.e. we have some rows duplicated or similar). frac=1 ensures same data lengths as originally
                 data = data.sample(frac=1, replace=True, random_state=self.random_state + i), 
                 target_name = target_name, 
-                min_instances = min_instances,
-                max_depth = max_depth,
+                min_instances = self.min_instances,
+                max_depth = self.max_depth,
                 # By passing max_features we trigger the random sampling mechanism in the tree!
                 max_features = int(len(data.columns) / 3),
                 categorical_features=categorical_features
             )
-            for i in range(nr_of_trees)
+            for i in range(self.nr_of_trees)
         )
 
         # list of the trees about to be trained
