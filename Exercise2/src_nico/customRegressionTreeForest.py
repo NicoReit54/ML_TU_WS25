@@ -451,6 +451,13 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
             # Small fallback in case of no best value found
             if best_feature == None:
                 logger.info(f"No best feature to split on found. \nDepth: {depth} \nFeatures left: {features} ")
+                prediction = float(np.mean(data[target_name]))
+                return {
+                    "samples": len(data),
+                    "prediction": prediction,
+                    "error": self._calc_MSE(data[target_name], prediction)
+                }
+                
                 return np.mean(data[target_name])
 
             if is_continuous:
@@ -572,6 +579,8 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
             Stores the learned tree in `self.tree_` of the initialized instance of this class.
         '''
         # added to comply with GridSearchCV interface and not mess with the way I used data in the other methods
+        X = pd.DataFrame(X)
+    
         data = X.copy()
         data["_target"] = y
         self.target_name = "_target"
@@ -692,8 +701,12 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         if not hasattr(self, "tree_"):
             raise ValueError("The tree has not been fitted yet, use .fit() method of this class instance first!")
         
-        if not isinstance(X_pred, pd.DataFrame): # TODO: Ammend this and make suitable for more types
-            raise ValueError(f"As of now, X_pred needs to be of type pd.DataFrame.\nIt is of type {type(X_pred)}")
+        if not isinstance(X_pred, pd.DataFrame):
+            # allow numpy arrays by converting to DataFrame (TODO: At some point make everything numpy based to speed up)
+            if isinstance(X_pred, np.ndarray):
+                X_pred = pd.DataFrame(X_pred)
+            else:
+                raise ValueError(f"As of now, X_pred needs to be of type pd.DataFrame or np.ndarray. It is of type {type(X_pred)}")
         
         y_pred = self._predict_vectorized(X_pred, self.tree_)
         # to flatten the np.array and to get an output like with predict_old 
