@@ -553,8 +553,6 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
     def fit(self, 
             X: pd.DataFrame, 
             y: pd.Series,
-            #data: pd.DataFrame, 
-            #target_name: str, 
             categorical_features : list = []) -> Self:
             
         '''
@@ -562,10 +560,10 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
 
         Parameters
         ----------
-        data : pd.DataFrame
-            Training dataset containing features AND the target
-        target_name : str
-            Name of the target column
+        X : pd.DataFrame
+            Training dataset containing the features only
+        y: pd.Series
+            Training dataset containing the target only
         categorical_features : list, optional (but actually necessary in case of such)
             List of feature names that represent categorical features
         Returns
@@ -573,7 +571,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         Self
             Stores the learned tree in `self.tree_` of the initialized instance of this class.
         '''
-        # added to comply with GridSearchCV interface
+        # added to comply with GridSearchCV interface and not mess with the way I used data in the other methods
         data = X.copy()
         data["_target"] = y
         self.target_name = "_target"
@@ -953,13 +951,12 @@ class RandomForestNico():
         
         Parameters
         -------
-        data : pd.DataFrame
-            Training dataset containing features AND the target
-        target_name: str
-            Name of the target column
+        X : pd.DataFrame
+            Training dataset containing the features only
+        y: pd.Series
+            Training dataset containing the target only
         categorical_features : list, optional (but actually necessary in case of such)
             List of feature names that represent categorical features
-
         Returns
         -------
         Self
