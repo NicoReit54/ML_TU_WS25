@@ -32,7 +32,7 @@ def dict_depth(dic, level = 1):
                                for key in dic)
     
 class RegressionTreeNico():
-    '''
+    """
     Custom implementation of a regression decision tree for 
     184.702 Machine Learning (VU 3,0) 2025W
 
@@ -40,11 +40,38 @@ class RegressionTreeNico():
     categorical and continuous features. It uses variance/MSE reduction
     as the splitting criterion. It also supports recursive tree growth with
     configurable stopping criteria (minimum instances per leaf, maximum depth).
+            
+    Parameters
+    -------
+    min_instances : int, optional
+        Minimum number of samples required to allow further splitting, else mean is taken.
+    max_depth : int, optional
+        Maximum depth of the tree. If None, the tree grows until min_instances is reached
+    features: list, optional
+        Allows the user to choose only a subsample of the data for the fit
+    categorical_features : list, optional (but actually necessary in case of such)
+        List of feature names that represent categorical features
+    alpha: float, optional
+        If passed as != 0, this will enable cost-complexity pruning. 
+        For more info look into the respective method "_prune_cost_complexity()"
+    """    
 
-    '''    
-
-    def __init__(self, random_state=None) -> None:
+    def __init__(self, 
+                 min_instances: int = 2,
+                 max_depth: int = None,
+                 max_features: int = None,
+                 features_to_choose: ArrayLike | pd.DataFrame = None,
+                 categorical_features: list = [],
+                 alpha: float = 0.0,
+                 random_state=None) -> None:
+                 
         self.random_state=random_state
+        self.min_instances = min_instances
+        self.max_depth = max_depth
+        self.max_features = max_features
+        self.features_to_choose = features_to_choose
+        self.categorical_features = categorical_features
+        self.alpha = alpha
 
     def _calc_MSE(self, Y_true: ArrayLike, Y_pred: ArrayLike) -> np.float64:
         '''
@@ -399,7 +426,6 @@ class RegressionTreeNico():
                 "prediction": prediction,
                 "error": self._calc_MSE(data[target_name], prediction)
             }
-            return np.mean(data[target_name])
     
         # If the dataset has reached the wished for tdepth, return the mean target feature value of the remaining dataset as before
         elif max_depth != None and depth >= max_depth:
@@ -409,7 +435,6 @@ class RegressionTreeNico():
                 "prediction": prediction,
                 "error": self._calc_MSE(data[target_name], prediction)
             }
-            return np.mean(data[target_name])
 
         # Now this is the actual "tree growing" part
         else:
@@ -525,15 +550,7 @@ class RegressionTreeNico():
                     "error": self._calc_MSE(data[target_name], np.mean(data[target_name]))
                 }
     
-    def fit(self, 
-            data: pd.DataFrame, 
-            target_name: str, 
-            min_instances: int = 2,
-            max_depth: int = None,
-            max_features: int = None,
-            features_to_choose: ArrayLike | pd.DataFrame = None,
-            categorical_features: list = [],
-            alpha: float = 0.0) -> Self:
+    def fit(self, data: pd.DataFrame, target_name: str) -> Self:
             
         '''
         Creates ("fits") the regression tree to the given dataset.
@@ -544,30 +561,16 @@ class RegressionTreeNico():
             Training dataset containing features AND the target
         target_name : str
             Name of the target column
-        min_instances : int, optional
-            Minimum number of samples required to allow further splitting, else mean is taken.
-        max_depth : int, optional
-            Maximum depth of the tree. If None, the tree grows until min_instances is reached
-        features: list, optional
-            Allows the user to choose only a subsample of the data for the fit
-        categorical_features : list, optional (but actually necessary in case of such)
-            List of feature names that represent categorical features
-        alpha: float, optional
-            If passed as != 0, this will enable cost-complexity pruning. 
-            For more info look into the respective method "_prune_cost_complexity()"
 
         Returns
         -------
         Self
             Stores the learned tree in `self.tree_` of the initialized instance of this class.
         '''
+
         # to potentially reuse for normalization
         self.dataset_size = len(data)
         self.target_name = target_name
-        self.categorical_features = categorical_features
-        self.max_depth = max_depth
-        self.min_instances = min_instances
-        self.max_features = max_features
 
         # make sure we do not loose the target (and differentiate here as we also pass np.ndarray due to the random sampling)
         if features_to_choose is not None and target_name not in features_to_choose:
@@ -583,12 +586,12 @@ class RegressionTreeNico():
             data = data[features_to_choose]
 
         self.tree_ = self._Classfier(
-            data, target_name, categorical_features=categorical_features, 
-            min_instances=min_instances, max_depth=max_depth, max_features=max_features
+            data, target_name, categorical_features=self.categorical_features, 
+            min_instances=self.min_instances, max_depth=self.max_depth, max_features=self.max_features
         )
         
         # start pruning if alpha > 0.0 is passed
-        if alpha > 0.0:
+        if self.alpha > 0.0:
             self.tree_ = self._prune_cost_complexity(self.tree_, alpha)
         return self
         
