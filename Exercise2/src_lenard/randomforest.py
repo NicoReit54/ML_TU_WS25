@@ -1,7 +1,7 @@
 import numpy as np
 # Import the DecisionTreeRegressor from the decision_tree_regressor.py file
 # Assuming it's in the same directory or available in the path
-from decisiontree import DecisionTreeRegressor
+from .decisiontree import DecisionTreeRegressor #needed to add the . for use in master_comparison
 
 class RandomForestRegressor:
     def __init__(self, n_estimators=100, min_samples_split=2, max_depth=100, n_features=None, bootstrap=True):
