@@ -1,16 +1,6 @@
+# classic
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-from collections import defaultdict # for set_params
-
-# for testing and comparison
-import time
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.datasets import make_regression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 # for parallelization!
 from joblib import Parallel, delayed
@@ -20,20 +10,14 @@ from typing import Literal, Dict, Any, Self
 from numpy.typing import ArrayLike
 import logging
 
+# used to make the custom class compatible with things like gridsearchcv! 
+from sklearn.base import BaseEstimator, RegressorMixin
+
+# Logging
 logging.basicConfig(level=logging.WARNING,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
-
-def dict_depth(dic, level = 1):
-    
-    if not isinstance(dic, dict) or not dic:
-        return level
-    
-    return max(dict_depth(dic[key], level + 1)
-                               for key in dic)
-
-from sklearn.base import BaseEstimator, RegressorMixin
 
 class RegressionTreeNico(BaseEstimator, RegressorMixin):
     """
@@ -44,6 +28,9 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
     categorical and continuous features. It uses variance/MSE reduction
     as the splitting criterion. It also supports recursive tree growth with
     configurable stopping criteria (minimum instances per leaf, maximum depth).
+
+    Remark: BaseEstimator, RegressorMixin from sklearn.base are only used to 
+    make this class compatible to evaluation/training methods like gridsearchCV!
             
     Parameters
     -------
@@ -421,7 +408,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
         -------
         dict[str, Any] or float
             A nested dictionary representing the tree structure. 
-            "Any" will be another such dictionary or a float (= mean target value) if the leaf node is reached
+            "Any" will be another such dictionary. If the leaf node is reached there will only be the information on nr of samples, the mean/prediction and the error of that.
 
         
         '''
@@ -476,8 +463,8 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
                 {
                     "feature": "X1",
                     "threshold": 400,
-                    "left": { subtree(s) for X <= 400 or value in case we reached conditions (ie leaf node) above},
-                    "right": { subtree(s) for X > 400 or value in case we reached conditions (ie leaf node) above},
+                    "left": { subtree(s) for X <= 400 or leaf dict in case we reached conditions (ie leaf node) above},
+                    "right": { subtree(s) for X > 400 or leaf dict in case we reached conditions (ie leaf node) above},
                     "samples": number of samples at this node,
                     "prediction": mean of the target at this point,
                     "error": mse at this node if it was treated as a leaf
@@ -761,17 +748,6 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
             # should be weighted as everything else as tree[error] is based on my 
             # per-sample MSE. Hence multiply by leaf size and divide by total N
             return tree["error"] * tree["samples"] / self.dataset_size
-        '''
-        {
-        "feature": "X1",
-        "threshold": 400,
-        "left": { subtree(s) for X <= 400 or value in case we reached conditions (ie leaf node) above},
-        "right": { subtree(s) for X > 400 or value in case we reached conditions (ie leaf node) above},
-        "samples": number of samples at this node,
-        "prediction": mean of the target at this point,
-        "error": mse at this node if it was treated as a leaf
-        }   
-        '''      
     
     def _sum_leaves(self, tree: dict) -> int:
         """
@@ -843,49 +819,11 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
             }
         
         return tree
-    '''
-    def get_params(self, deep=True) -> dict[str, Any]:
-        return {
-            "min_instances": self.min_instances,
-            "max_depth": self.max_depth,
-            "max_features": self.max_features,
-            "features_to_choose": self.features_to_choose,
-            "categorical_features": self.categorical_features,
-            "alpha": self.alpha,
-            "random_state": self.random_state,
-        }
-    
-    def set_params(self, **params) -> Self:
-        """Set the parameters of this estimator.
 
-        The method works on simple estimators as well as on nested objects
-        (such as :class:`~sklearn.pipeline.Pipeline`). The latter have
-        parameters of the form ``<component>__<parameter>`` so that it's
-        possible to update each component of a nested object.
-
-        Parameters
-        ----------
-        **params : dict
-            Estimator parameters.
-
-        Returns
-        -------
-        self : estimator instance
-            Estimator instance.
-        """
-        if not params:
-            # Simple optimization to gain speed (inspect is slow)
-            return self
-
-        for key, value in params.items():
-            key, delim, sub_key = key.partition("__")
-            setattr(self, key, value)
-
-        return self
-    '''
     def print_tree(self, tree: dict = None, depth: int = 0) -> None:
         """
         Recursively prints the regression tree structure
+        # TODO adapt to the fact that the leaf is not anymore a float only!
         """
         indent = "  " * depth
         # initialize in first step
@@ -918,7 +856,7 @@ class RegressionTreeNico(BaseEstimator, RegressorMixin):
                 else:
                     print(f"{indent}--> Value {val} leaf: {branch:.3f}")
 
-class RandomForestNico():
+class RandomForestNico(): # TODO: Make compatible with gridsearchcv
     """
     Custom implementation of a regression decision forest for 
     184.702 Machine Learning (VU 3,0) 2025W
@@ -995,6 +933,7 @@ class RandomForestNico():
                                        min_instances = self.min_instances,
                                        max_depth = self.max_depth,
                                        max_features = int(len(X.columns) / 3)).fit) 
+            # variables to pass to .fit() method of the tree
             (   
                 # Bootstrap Sampling:
                 # replace=True ensures sampling WITH replacement (i.e. we have some rows duplicated or similar). frac=1 ensures same data lengths as originally
