@@ -72,7 +72,7 @@ class DecisionTreeRegressor:
         left_idxs, right_idxs = self._split(X_column, threshold)
 
         if len(left_idxs) == 0 or len(right_idxs) == 0:
-            return 0
+            return -1
         
         n = len(y)
         n_l, n_r = len(left_idxs), len(right_idxs)
