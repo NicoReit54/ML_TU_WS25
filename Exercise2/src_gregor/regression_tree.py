@@ -2,6 +2,15 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Union
 
+# for parallelization!
+from joblib import Parallel, delayed
+
+# for typing
+from typing import Literal, Dict, Any, Self
+
+# used to make the custom class compatible with things like gridsearchcv! 
+from sklearn.base import BaseEstimator, RegressorMixin
+
 class Node:
     """
     Represents a node in the decision tree.
@@ -13,7 +22,7 @@ class Node:
         left: Optional['Node'] = None,
         right: Optional['Node'] = None,
         value: Optional[float] = None
-    ):
+    ) -> None:
         self.feature_idx = feature_idx
         self.threshold = threshold
         self.left = left
@@ -23,7 +32,7 @@ class Node:
     def is_leaf(self) -> bool:
         return self.value is not None
 
-class DecisionTreeRegressor:
+class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
     """
     A Regression Tree that accepts preprocessed (numerical) data.
     Uses optimized variance reduction (O(N) via cumulative sums).
@@ -35,7 +44,7 @@ class DecisionTreeRegressor:
         min_samples_leaf: int = 1,
         max_features: Union[int, float, str, None] = None,
         random_state: Optional[int] = None
-    ):
+    ) -> None:
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
@@ -44,7 +53,7 @@ class DecisionTreeRegressor:
         self.root = None
         self.rng = np.random.default_rng(random_state)
 
-    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series]):
+    def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series]) -> Self:
         #ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
         if isinstance(y, pd.Series): y = y.values
