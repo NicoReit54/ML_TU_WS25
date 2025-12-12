@@ -50,7 +50,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         self.min_samples_leaf = min_samples_leaf
         self.max_features = max_features
         self.random_state = random_state
-        self.root_ = None
+        self.root_ = None # *_ because this is how we can fit this to the sklearn api with things like gridsearchcv. so it can recognize the item!
         self.rng = np.random.default_rng(random_state)
 
     def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series]) -> Self:

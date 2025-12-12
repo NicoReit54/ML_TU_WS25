@@ -7,8 +7,10 @@ from joblib import Parallel, delayed
 
 from .regression_tree import DecisionTreeRegressor
 
+# used to make the custom class compatible with things like gridsearchcv! 
+from sklearn.base import BaseEstimator, RegressorMixin
 
-class RandomForestRegressor:
+class RandomForestRegressor(BaseEstimator, RegressorMixin):
     """
     Random Forest wrapper.
     """
@@ -29,7 +31,7 @@ class RandomForestRegressor:
         self.max_features = max_features
         self.bootstrap = bootstrap
         self.random_state = random_state
-        self.trees = []
+        self.trees_ = [] # *_ because this is how we can fit this to the sklearn api with things like gridsearchcv. so it can recognize the item!
         self.rng = np.random.default_rng(random_state)
     
     def _fit_tree(self, i: int, X: np.array, y: np.array, idxs:np.array) -> DecisionTreeRegressor:
@@ -44,7 +46,7 @@ class RandomForestRegressor:
         :return: fitted DecisionTreeRegressor
         :rtype: DecisionTreeRegressor
         '''
-        
+
         # Bootstrap Sampling:
         if self.bootstrap:
             X_sample, y_sample = X[idxs], y[idxs]
@@ -77,7 +79,7 @@ class RandomForestRegressor:
             for _ in range(self.n_estimators)
         ]
 
-        self.trees = Parallel(n_jobs=-1)(
+        self.trees_ = Parallel(n_jobs=-1)(
             delayed(self._fit_tree)(
                 i, X, y, bootstrap_idxs[i])
             for i in range(self.n_estimators)
@@ -109,14 +111,14 @@ class RandomForestRegressor:
         '''
         return self
 
-    def predict(self, X) -> pd.Series:
+    def predict(self, X) -> np.ndarray:
         # ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
 
         # parallelize, n_jobs=-1 for using all cores avaialble
         tree_preds = Parallel(n_jobs=-1)(
             delayed(tree.predict) (X) 
-            for tree in self.trees)
+            for tree in self.trees_)
         
         # convert from series to array
         #tree_preds = [pred.values for pred in tree_preds]
