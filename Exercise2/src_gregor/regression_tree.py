@@ -50,7 +50,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         self.min_samples_leaf = min_samples_leaf
         self.max_features = max_features
         self.random_state = random_state
-        self.root = None
+        self.root_ = None
         self.rng = np.random.default_rng(random_state)
 
     def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series]) -> Self:
@@ -58,13 +58,13 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         if isinstance(X, pd.DataFrame): X = X.values
         if isinstance(y, pd.Series): y = y.values
         
-        self.root = self._grow_tree(X, y, depth=0)
+        self.root_ = self._grow_tree(X, y, depth=0)
         return self
 
     def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         #ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
-        return np.array([self._traverse_tree(x, self.root) for x in X])
+        return np.array([self._traverse_tree(x, self.root_) for x in X])
 
     def _grow_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
         n_samples, n_features = X.shape
