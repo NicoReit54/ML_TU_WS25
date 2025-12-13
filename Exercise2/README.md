@@ -72,6 +72,9 @@ Each dataset provided was different, especially in its form (wide, long, short) 
   Each dataset has its own preprocessing pipeline (`steel_preproc_preproc.py`, `temp_corn_preproc.py`, `wave_energy_farm_preproc.py`) for basic preprocessing steps.
 
 ## Getting Started
+
+Developed and working on Python 3.12.12
+
 Install dependencies:
 ```bash
 pip install -r requirements.txt
