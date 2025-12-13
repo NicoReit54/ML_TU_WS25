@@ -13,10 +13,43 @@ from sklearn.base import BaseEstimator, RegressorMixin
 class RandomForestRegressor(BaseEstimator, RegressorMixin):
     """
     Random Forest wrapper.
+
+    This is a simplified implementation of a Random Forest for regression,
+    built on top of the custom `DecisionTreeRegressor`. It supports bootstrap
+    sampling, feature subsampling, and parallel training of trees.
+
+    Parameters
+    ----------
+    n_estimators : int, default=10
+        Number of trees in the forest
+    max_depth : int, default=20
+        Maximum depth of each tree
+    min_samples_split : int, default=2
+        Minimum number of samples required to split an internal node
+    min_samples_leaf : int, default=1
+        Minimum number of samples required to be at a leaf node
+    max_features : {"sqrt", "log2"}, int, float or None, default=None
+        Number of random features to consider when looking for the best split:
+        - None: all features
+        - int: absolute number of features
+        - float: fraction of features
+        - "sqrt": square root of total features
+        - "log2": log2 of total features
+    bootstrap : bool, default=True
+        Whether bootstrap samples are used when building trees
+    random_state : int, optional
+        Random seed for reproducibility
+
+    Attributes
+    ----------
+    trees_ : list of DecisionTreeRegressor
+        The collection of all fitted trees in the forest. Underscore to comply with sklearns naming convention
+    rng : numpy.random.Generator
+        Random number generator instance
     """
     def __init__(
         self,
-        n_estimators: int = 100,
+        n_estimators: int = 10,
         max_depth: int = 20,
         min_samples_split: int = 2,
         min_samples_leaf: int = 1,
@@ -36,15 +69,26 @@ class RandomForestRegressor(BaseEstimator, RegressorMixin):
     
     def _fit_tree(self, i: int, X: np.array, y: np.array, idxs:np.array) -> DecisionTreeRegressor:
         '''
-        Helperfunction to fit the tree
-        within the parallelized way further down below
-        
-        :param i: iteration sequence
-        :param X: training data
-        :param y: target
-        :param idxs: bootstrap samples if wanted
-        :return: fitted DecisionTreeRegressor
-        :rtype: DecisionTreeRegressor
+        Fit a single decision tree.
+
+        This helper function is used internally for the parallel training.
+        There is potentially/surely a better way but it works for now!
+
+        Parameters
+        ----------
+        i : int
+            Index of the tree in the ensemble (used for seeding)
+        X : ndarray of shape (n_samples, n_features)
+            Training input samples
+        y : ndarray of shape (n_samples,)
+            Target values
+        idxs : ndarray of shape (n_samples,)
+            Indices for bootstrap sampling
+
+        Returns
+        -------
+        tree : DecisionTreeRegressor
+            A fitted decision tree regressor
         '''
 
         # Bootstrap Sampling:
@@ -66,6 +110,21 @@ class RandomForestRegressor(BaseEstimator, RegressorMixin):
         return tree.fit(X_sample, y_sample)
 
     def fit(self, X, y) -> Self:
+        """
+        Fits the custom random forest regressor
+
+        Parameters
+        ----------
+        X : ndarray or DataFrame of shape (n_samples, n_features)
+            Training input samples
+        y : ndarray or Series of shape (n_samples,)
+            Target values
+
+        Returns
+        -------
+        self : RandomForestRegressor
+            Fitted estimator
+        """
         # ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
         if isinstance(y, pd.Series): y = y.values
