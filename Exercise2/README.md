@@ -29,9 +29,6 @@ exercise_2/
 │   ├── testing.ipypy
 │   └── customRegressionTreeForest.py
 │
-├── forest/
-│   └── RandomForestRegressor.py
-│
 ├── master_comparison.ipynb # comparison notebook between all implementation
 │
 ├── comparison_notebook.ipynb # comparison notebook for final metric comparison of the custom implementation to other established ones
