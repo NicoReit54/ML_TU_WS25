@@ -14,7 +14,22 @@ from sklearn.base import BaseEstimator, RegressorMixin
 class Node:
     """
     Represents a node in the decision tree.
+
+    Parameters / Attributes
+    ----------
+    feature_idx : int, optional
+        Index of the feature used for splitting at this node
+    threshold : float, optional
+        Threshold value used for the split
+    left : Node, optional
+        Left child node
+    right : Node, optional
+        Right child node
+    value : float, optional
+        Prediction value if this node is a leaf
+
     """
+
     def __init__(
         self,
         feature_idx: Optional[int] = None,
@@ -30,13 +45,40 @@ class Node:
         self.value = value
 
     def is_leaf(self) -> bool:
+        # leaf nodes are defined by having a prediction value
         return self.value is not None
 
 class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
     """
     A Regression Tree that accepts preprocessed (numerical) data.
     Uses optimized variance reduction (O(N) via cumulative sums).
+    
+    Parameters
+    ----------
+    max_depth : int, default=10
+        Maximum depth of the tree
+    min_samples_split : int, default=2
+        Minimum number of samples required to split an internal node
+    min_samples_leaf : int, default=1
+        Minimum number of samples required to be at a leaf node
+    max_features : int, float, str or None, default=None
+        Number of random features to consider for splitting:
+        - None: all features
+        - int: absolute number of features
+        - float: fraction of features
+        - 'sqrt': square root of total features
+        - 'log2': log2 of total features
+    random_state : int, optional
+        Random seed for reproducibility
+
+    Attributes
+    ----------
+    root_ : Node
+        Root node of the fitted decision tree. With an underscore to comply with sklearns naming convention
+    rng : numpy.random.Generator
+        Random number generator instance
     """
+
     def __init__(
         self,
         max_depth: int = 10,
@@ -58,12 +100,14 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         if isinstance(X, pd.DataFrame): X = X.values
         if isinstance(y, pd.Series): y = y.values
         
+        # recursively grow tree at starting point aka at root
         self.root_ = self._grow_tree(X, y, depth=0)
         return self
 
     def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         #ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
+        # traverse tree for each sample (so row-wise through X ofc)
         return np.array([self._traverse_tree(x, self.root_) for x in X])
 
     def _grow_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
@@ -78,7 +122,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
             #create a leaf node
             return Node(value=np.mean(y))
 
-        #feature subsampling (for Random Forest)
+        # Feature subsampling (mainly to be used in Random Forest)
         feat_idxs = self._get_feature_indices(n_features)
 
         #finding best split
@@ -101,12 +145,12 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
             right=right_child
         )
 
-    def _find_best_split(self, X, y, feat_idxs):
+    def _find_best_split(self, X, y, feat_idxs)-> dict[str, Any]:
         """
         Loop through every selected feature and test to find the best possible split.
         """
         best_split = {'impurity_gain': -1, 'feature_idx': None, 'threshold': None, 'indices': None}
-        #total sum of squares
+        #total sum of squares aka the parent impurity = variance * n_samples (times n to account for the 1/n in the var() calc)
         current_uncertainty = np.var(y) * len(y) 
 
         for feat_idx in feat_idxs:
@@ -115,7 +159,10 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
                 
         return best_split
 
-    def _find_split(self, X_col, y, feat_idx, parent_impurity, best_split):
+    def _find_split(self, X_col, y, feat_idx, parent_impurity, best_split) -> None:
+        """
+        Mutates the best_split dictionary in-place after passed. Hence no return value.
+        """
         #sort X and y by the feature value
         sorted_idxs = np.argsort(X_col)
         X_sorted = X_col[sorted_idxs]
@@ -131,7 +178,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
 
         #scan for the best split point
         for i in range(self.min_samples_leaf, n - self.min_samples_leaf + 1):
-            #skip duplicate values
+            # skip identical consecutive values (which would be no valid threshold)
             if X_sorted[i] == X_sorted[i-1]: 
                 continue 
 
@@ -163,9 +210,11 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
                 })
 
     def _traverse_tree(self, x, node):
+        # if a leaf return the stored prediction value
         if node.is_leaf():
             return node.value
         
+        # else go through the left and right child
         if x[node.feature_idx] <= node.threshold:
             return self._traverse_tree(x, node.left)
         return self._traverse_tree(x, node.right)
