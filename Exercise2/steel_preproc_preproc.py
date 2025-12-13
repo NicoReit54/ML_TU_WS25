@@ -4,7 +4,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 # Mostly taken from Lenard's exploration notebook. Did not check much if it makes sense or is proper, so should be double checked and fixed.
 
-df = pd.read_csv("data/Steel_industry_data.csv")
+df = pd.read_csv("Exercise2/data/Steel_industry_data.csv")
 df.head()
 df = df.drop(['date'],axis=1)
 df = df.dropna()
@@ -35,4 +35,4 @@ result_df[target_col] = y
 #result_df.head()
 #print(result_df.dtypes)
 
-result_df.to_csv("data/steel_industry_data_preprocessed.csv", index=False)
+result_df.to_csv("Exercise2/data/steel_industry_data_preprocessed.csv", index=False)
