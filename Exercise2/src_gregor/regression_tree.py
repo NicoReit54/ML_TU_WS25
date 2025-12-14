@@ -115,7 +115,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         variance = np.var(y) if len(y) > 0 else 0
         
         #stopping Criteria
-        if (depth >= self.max_depth or 
+        if ((self.max_depth is not None and depth >= self.max_depth) or 
             n_samples < self.min_samples_split or 
             n_samples < 2 * self.min_samples_leaf or
             variance == 0):
