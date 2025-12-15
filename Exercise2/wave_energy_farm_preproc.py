@@ -1,6 +1,8 @@
 import pandas as pd
 
-# One of the enery datafiles
+# Data source: https://archive.ics.uci.edu/dataset/882/large-scale+wave+energy+farm
+
+# One of the energy datafiles
 
 df = pd.read_csv("Exercise2/data/WEC_Perth_49.csv")
 df.head()

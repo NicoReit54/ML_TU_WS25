@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Union, Self
 
-# for parallelization!
+# For parallelization!
 from joblib import Parallel, delayed
 
 from .regression_tree import DecisionTreeRegressor
 
-# used to make the custom class compatible with things like gridsearchcv! 
+# Used to make the custom class compatible with things like gridsearchcv! 
 from sklearn.base import BaseEstimator, RegressorMixin
 
 class RandomForestRegressor(BaseEstimator, RegressorMixin):
@@ -97,7 +97,7 @@ class RandomForestRegressor(BaseEstimator, RegressorMixin):
         else:
             X_sample, y_sample = X, y
 
-        # seed per tree different to ensure diversity
+        # Seed per tree different to ensure diversity
         tree_seed = (self.random_state + i) if self.random_state is not None else None
 
         tree = DecisionTreeRegressor(
@@ -125,13 +125,13 @@ class RandomForestRegressor(BaseEstimator, RegressorMixin):
         self : RandomForestRegressor
             Fitted estimator
         """
-        # ensure numpy format
+        # Ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
         if isinstance(y, pd.Series): y = y.values
         
         n_samples = X.shape[0]
     
-        # precompute bootstrap samples if wanted, could not find a better way but to do it outside of the parallel "loop"
+        # Precompute bootstrap samples if wanted, could not find a better way but to do it outside of the parallel "loop"
         bootstrap_idxs = [
             self.rng.choice(n_samples, n_samples, replace=True)
             if self.bootstrap else np.arange(n_samples)
@@ -171,16 +171,16 @@ class RandomForestRegressor(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X) -> np.ndarray:
-        # ensure numpy format
+        # Ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
 
-        # parallelize, n_jobs=-1 for using all cores avaialble
+        # Parallelize, n_jobs=-1 for using all cores available
         tree_preds = Parallel(n_jobs=-1)(
             delayed(tree.predict) (X) 
             for tree in self.trees_)
         
-        # convert from series to array
+        # Convert from series to array
         #tree_preds = [pred.values for pred in tree_preds]
         
-        # aggregate predictions by averaging
+        # Aggregate predictions by averaging
         return np.mean(tree_preds, axis=0)

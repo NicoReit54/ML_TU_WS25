@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 from typing import Optional, Union
 
-# for parallelization!
+# For parallelization!
 from joblib import Parallel, delayed
 
-# for typing
+# For typing
 from typing import Literal, Dict, Any, Self
 
-# used to make the custom class compatible with things like gridsearchcv! 
+# Used to make the custom class compatible with things like gridsearchcv! 
 from sklearn.base import BaseEstimator, RegressorMixin
 
 class Node:
@@ -45,7 +45,7 @@ class Node:
         self.value = value
 
     def is_leaf(self) -> bool:
-        # leaf nodes are defined by having a prediction value
+        # Leaf nodes are defined by having a prediction value
         return self.value is not None
 
 class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
@@ -96,48 +96,48 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         self.rng = np.random.default_rng(random_state)
 
     def fit(self, X: Union[np.ndarray, pd.DataFrame], y: Union[np.ndarray, pd.Series]) -> Self:
-        #ensure numpy format
+        # Ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
         if isinstance(y, pd.Series): y = y.values
         
-        # recursively grow tree at starting point aka at root
+        # Recursively grow tree at starting point aka at root
         self.root_ = self._grow_tree(X, y, depth=0)
         return self
 
     def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
-        #ensure numpy format
+        # Ensure numpy format
         if isinstance(X, pd.DataFrame): X = X.values
-        # traverse tree for each sample (so row-wise through X ofc)
+        # Traverse tree for each sample (so row-wise through X ofc)
         return np.array([self._traverse_tree(x, self.root_) for x in X])
 
     def _grow_tree(self, X: np.ndarray, y: np.ndarray, depth: int) -> Node:
         n_samples, n_features = X.shape
         variance = np.var(y) if len(y) > 0 else 0
         
-        #stopping Criteria
+        # Stopping Criteria
         if ((self.max_depth is not None and depth >= self.max_depth) or 
             n_samples < self.min_samples_split or 
             n_samples < 2 * self.min_samples_leaf or
             variance == 0):
-            #create a leaf node
+            # Create a leaf node
             return Node(value=np.mean(y))
 
         # Feature subsampling (mainly to be used in Random Forest)
         feat_idxs = self._get_feature_indices(n_features)
 
-        #finding best split
+        # Finding best split
         best_split = self._find_best_split(X, y, feat_idxs)
 
-        #if no valid split found, create a leaf node
+        # If no valid split found, create a leaf node
         if best_split['impurity_gain'] == -1:
             return Node(value=np.mean(y))
 
-        #split data into children and recurse
+        # Split data into children and recurse
         left_idxs, right_idxs = best_split['indices']
         left_child = self._grow_tree(X[left_idxs], y[left_idxs], depth + 1)
         right_child = self._grow_tree(X[right_idxs], y[right_idxs], depth + 1)
 
-        #finally, create decision node
+        # Finally, create decision node
         return Node(
             feature_idx=best_split['feature_idx'],
             threshold=best_split['threshold'],
@@ -150,7 +150,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         Loop through every selected feature and test to find the best possible split.
         """
         best_split = {'impurity_gain': -1, 'feature_idx': None, 'threshold': None, 'indices': None}
-        #total sum of squares aka the parent impurity = variance * n_samples (times n to account for the 1/n in the var() calc)
+        # Total sum of squares aka the parent impurity = variance * n_samples (times n to account for the 1/n in the var() calc)
         current_uncertainty = np.var(y) * len(y) 
 
         for feat_idx in feat_idxs:
@@ -163,12 +163,12 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         """
         Mutates the best_split dictionary in-place after passed. Hence no return value.
         """
-        #sort X and y by the feature value
+        # Sort X and y by the feature value
         sorted_idxs = np.argsort(X_col)
         X_sorted = X_col[sorted_idxs]
         y_sorted = y[sorted_idxs]
         
-        #precompute cumulative sums. This allows for O(1) variance calculation later
+        # Precompute cumulative sums. This allows for O(1) variance calculation later
         n = len(y)
         sum_y = np.cumsum(y_sorted)
         sum_y_sq = np.cumsum(y_sorted ** 2)
@@ -176,31 +176,31 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         total_sum = sum_y[-1]
         total_sum_sq = sum_y_sq[-1]
 
-        #scan for the best split point
+        # Scan for the best split point
         for i in range(self.min_samples_leaf, n - self.min_samples_leaf + 1):
-            # skip identical consecutive values (which would be no valid threshold)
+            # Skip identical consecutive values (which would be no valid threshold)
             if X_sorted[i] == X_sorted[i-1]: 
                 continue 
 
-            #left stats
+            # Left stats
             n_l = i
             sum_l = sum_y[i-1]
             sum_sq_l = sum_y_sq[i-1]
-            #calculate SSE for left child
+            # Calculate SSE for left child
             var_sum_l = sum_sq_l - (sum_l**2 / n_l)
 
-            #right stats
+            # Right stats
             n_r = n - i
             sum_r = total_sum - sum_l
             sum_sq_r = total_sum_sq - sum_sq_l
-            #calculate SSE for right child
+            # Calculate SSE for right child
             var_sum_r = sum_sq_r - (sum_r**2 / n_r)
 
-            #calculate gain of split
+            # Calculate gain of split
             child_impurity = var_sum_l + var_sum_r
             gain = parent_impurity - child_impurity
 
-            #update best split if gain is better
+            # Update best split if gain is better
             if gain > best_split['impurity_gain']:
                 best_split.update({
                     'impurity_gain': gain,
@@ -210,11 +210,11 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
                 })
 
     def _traverse_tree(self, x, node):
-        # if a leaf return the stored prediction value
+        # If a leaf, return the stored prediction value
         if node.is_leaf():
             return node.value
         
-        # else go through the left and right child
+        # Else go through the left and right child
         if x[node.feature_idx] <= node.threshold:
             return self._traverse_tree(x, node.left)
         return self._traverse_tree(x, node.right)
@@ -223,19 +223,19 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         """
         Determine which feature indices to consider for the current split.
         """
-        #select all features
+        # Select all features
         if self.max_features is None:
             n_select = n_total_features
-        #select int number of features
+        # Select int number of features
         elif isinstance(self.max_features, int):
             n_select = self.max_features
-        #select float fraction of features
+        # Select float fraction of features
         elif isinstance(self.max_features, float):
             n_select = int(self.max_features * n_total_features)
-        #select sqrt number of features
+        # Select sqrt number of features
         elif self.max_features == 'sqrt':
             n_select = int(np.sqrt(n_total_features))
-        #select log2 number of features
+        # Select log2 number of features
         elif self.max_features == 'log2':
             n_select = int(np.log2(n_total_features))
 
@@ -243,6 +243,6 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
             n_select = n_total_features
         
         n_select = max(1, min(n_select, n_total_features))
-        #randomly select feature indices
+        # Randomly select feature indices
         return self.rng.choice(n_total_features, n_select, replace=False)
 
