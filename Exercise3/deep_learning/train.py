@@ -1,0 +1,96 @@
+import torch
+import torch.nn as nn
+from tqdm import tqdm
+
+# Sources: 
+# https://docs.pytorch.org/tutorials/beginner/introyt/trainingyt.html 
+# https://docs.pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+# and CoPilot (esp. for fancy tqdm! )
+
+
+def train_one_epoch(model, dataloader, optimizer, criterion, device):
+    running_loss = 0
+    correct = 0
+    total = 0
+
+    # Set the model to training mode, enabling dropout (to improve generalization and avoid overfitting), batch normalization updates...
+    model.train()
+    
+    # Iterate over the entire training dataset in this one batch
+    for images, labels in tqdm(dataloader, desc="Training", leave=False):
+        
+        # Move data to GPU/CPU depending on the selected "device" (weird name for that)
+        images, labels = images.to(device), labels.to(device)
+        
+        # Zero gradients for every batch: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
+        # (why? > In Pytorch gradients get accumulated by default due to some convenient
+        # handling for other models. If not set Otherwise, the gradient would be a combination of the old gradient, 
+        # which you have already used to update your model parameters and the newly-computed gradient. 
+        # It would therefore point in some other direction than the intended direction towards the minimum)
+        optimizer.zero_grad()
+
+        # Making prediction for each batch
+        outputs = model(images)
+        
+        # Computing loss and its gradients 
+        loss = criterion(outputs, labels)
+        loss.backward()
+
+        # Adjusting the learning weights, i.e. updating the model parameters (gradient descent step)
+        optimizer.step()
+
+        # accumulate the loss for statistics (loss.item() converts the tensor into a float > funfact: moves it into the CPU if before GPU)
+        running_loss += loss.item() * images.size(0) # times batch size to get the entire loss per epoch as .item() gives the mean loss
+
+        # Compute the number of correct predictions in this batch for stats later
+        _, preds = outputs.max(1)
+        correct += preds.eq(labels).sum().item()
+        total += labels.size(0)
+    
+    # Compute average loss and accuracy for the entire epoch
+    epoch_loss = running_loss / total
+    epoch_acc = correct / total
+    return epoch_loss, epoch_acc
+
+
+def validate(model, dataloader, criterion, device):
+    running_loss = 0
+    correct = 0
+    total = 0
+
+    # Set the model to evaluation mode, disabling dropout and using population
+    # statistics for batch normalization.
+    model.eval()
+
+    # Disable gradient computation to speed up validation (and reduce memory usage)
+    with torch.no_grad():
+        for images, labels in tqdm(dataloader, desc="Validation", leave=False):
+            images, labels = images.to(device), labels.to(device)
+
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+
+            # get the stats again
+            running_loss += loss.item() * images.size(0)
+            _, preds = outputs.max(1)
+            correct += preds.eq(labels).sum().item()
+            total += labels.size(0)
+
+    epoch_loss = running_loss / total
+    epoch_acc = correct / total
+    return epoch_loss, epoch_acc
+
+# Combining the two above now
+def train_model(model, trainloader, valloader, optimizer, criterion, device, epochs=10):
+    model.to(device) # again CPU/GPU decision
+
+    for epoch in range(epochs):
+        print(f"\nEpoch {epoch+1}/{epochs}")
+
+        train_loss, train_acc = train_one_epoch(model, trainloader, optimizer, criterion, device)
+        val_loss, val_acc = validate(model, valloader, criterion, device)
+
+        print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f}")
+        print(f"Val   Loss: {val_loss:.4f} | Val   Acc: {val_acc:.4f}")
+
+    return model
