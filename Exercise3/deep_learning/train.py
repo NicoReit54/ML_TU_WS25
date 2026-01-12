@@ -1,5 +1,6 @@
 import time
 import torch
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # Sources: 
@@ -88,6 +89,12 @@ def train_model(model, trainloader, valloader, optimizer, criterion, device, epo
     model.to(device) # again CPU/GPU decision
     total_train_time, total_val_time = 0.0, 0.0 # initialize "time stamps"
 
+    # For the plotting later
+    train_losses = []
+    val_losses = []
+    train_accuracies = []
+    val_accuracies = []
+
     for epoch in range(epochs):
         print(f"\nEpoch {epoch+1}/{epochs}")
         
@@ -117,8 +124,48 @@ def train_model(model, trainloader, valloader, optimizer, criterion, device, epo
         print(f"Train Time: {train_time:.2f}s")
         print(f"Val   Loss: {val_loss:.4f} | Val   Acc: {val_acc:.4f}")
         print(f"Val   Time: {val_time:.2f}s")
-    
+
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+        train_accuracies.append(train_acc)
+        val_accuracies.append(val_acc)
+
+
+    # Output of all the stats for the entire training process + plotting
     print(f"\nTotal Training Time  : {total_train_time:.2f}s")
     print(f"Total Validation Time: {total_val_time:.2f}s")
+
+    epochs_range = range(1, epochs + 1)
+    plt.figure(figsize=(12, 5))
+
+    # Loss curve
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, train_losses, label="Train Loss")
+    plt.plot(epochs_range, val_losses, label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training and Validation Loss")
+    plt.legend()
+    plt.grid(True)
+
+    # Accuracy curve
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, train_accuracies, label="Train Accuracy")
+    plt.plot(epochs_range, val_accuracies, label="Validation Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Training and Validation Accuracy")
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Try/catch for saving the figure because its more important to have the model than the plot
+    try:
+        plt.savefig("training_curves.png", dpi=300)
+    except Exception as e:
+        print(f"Could not save the figure: {e}")
+
 
     return model
