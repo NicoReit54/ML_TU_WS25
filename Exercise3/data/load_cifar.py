@@ -81,7 +81,7 @@ class CIFAR10(Dataset):
     def __getitem__(self, idx):
         flat = self.x[idx]  # (3072,)
 
-        # CIFAR layout will be (3, 32, 32) when reshaped this way
+        # CIFAR layout will be (3, 32, 32) when reshaped this way and 255 division normalizes to pixel range to [0, 1]
         img = torch.from_numpy(flat).view(3, 32, 32).float() / 255.0
         label = torch.tensor(self.y[idx], dtype=torch.long)
 
