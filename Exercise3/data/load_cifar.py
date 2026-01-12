@@ -1,6 +1,10 @@
 import pickle
 import os
 
+import numpy as np
+import torch
+from torch.utils.data import Dataset
+
 def unpickle(file) -> dict:
     '''
     Method to retrieve the CIFAR data, based on instructions given on:
@@ -57,3 +61,28 @@ def retrieve_all_cifar(train_test: str = "train") -> dict:
         raise ValueError("""Use either "test" or "train" for train_test variable.""")
     
     return cifar_data
+
+class CIFAR10(Dataset):
+    '''
+    To make the dataset loader compatible with PyTorch's DataLoader class, we create a custom Dataset class.
+    This class loads the CIFAR-10 data with the above defined methods and implements the required methods 
+    __len__ and __getitem__.
+    '''
+    def __init__(self, split: str = "train"):
+        data_dict = retrieve_all_cifar(train_test=split)
+
+        # Convert to numpy arrays for efficient reshape/indexing
+        self.x = np.asarray(data_dict["data"], dtype=np.uint8)      # (N, 3072) because each vector is stored as a  numpy array of 3072 uint8s
+        self.y = np.asarray(data_dict["labels"], dtype=np.int64)    # (N,)
+
+    def __len__(self) -> int:
+        return len(self.y)
+
+    def __getitem__(self, idx):
+        flat = self.x[idx]  # (3072,)
+
+        # CIFAR layout will be (3, 32, 32) when reshaped this way
+        img = torch.from_numpy(flat).view(3, 32, 32).float() / 255.0
+        label = torch.tensor(self.y[idx], dtype=torch.long)
+
+        return img, label
