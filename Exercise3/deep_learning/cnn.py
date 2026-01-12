@@ -9,9 +9,12 @@ import torch.nn.functional as F
 # https://stackoverflow.com/questions/79228528/i-am-trying-to-create-multiscale-cnn-but-facing-this-error-runtimeerror-mat1
 
 
-class CNN(nn.Module):
+class SimpleCNN(nn.Module):
     """
-    Convolutional Neural Network
+    SimpleConvolutional Neural Network with three convolutional layers followed by 
+    two fully connected layers for classification.
+
+    REMARK: As of now only suitable for square images (height = width).
     """
 
     def __init__(self,
@@ -43,7 +46,7 @@ class CNN(nn.Module):
 
         # Feature extractor 
         self.features = nn.Sequential(
-            # Input shape for CIFAR-10: (batch_size, 3, 32, 32)
+            # E.g. Input shape for CIFAR-10: (batch_size, 3, 32, 32)
             nn.Conv2d(in_channels=in_channels, 
                       out_channels=c1, 
                       kernel_size=3, padding=1), # kernel size 3 kind of standard, but also the picutres are not too high-res. With padding=1 this preserves the size
@@ -72,10 +75,12 @@ class CNN(nn.Module):
 
         # Classifier part: representing the fully connected layers
         self.classifier = nn.Sequential(
-            nn.Linear(self.flattened_size, c3 *2), # this here applies a linear transformation to the incoming data: y = xA^T + b
+            nn.Linear(in_features=self.flattened_size, out_features=c3 * 2), # this here applies a linear transformation to the incoming data: y = xA^T + b
             nn.ReLU(),
             nn.Dropout(p=0.5), # Dropout randomly disables neurons during training to reduce overfitting, p=0.5 means 50% chance to disable a neuron
-            nn.Linear(c3 *2, num_classes)
+            nn.Linear(in_features=c3 * 2, out_features=num_classes)
+            # out_features == num_classes, because we want to have one output per class for classification
+            # So, e.g. 10 classes: The output will be a vector of size 10, where each element represents the score for each class.
         )
 
     def _get_flattened_size(self, input_size: int, in_channels: int) -> int:
