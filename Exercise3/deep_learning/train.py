@@ -1,5 +1,5 @@
+import time
 import torch
-import torch.nn as nn
 from tqdm import tqdm
 
 # Sources: 
@@ -67,7 +67,10 @@ def validate(model, dataloader, criterion, device):
         for images, labels in tqdm(dataloader, desc="Validation", leave=False):
             images, labels = images.to(device), labels.to(device)
 
+            # compute outputs based on the current model and validation images
             outputs = model(images)
+            
+            # compute loss
             loss = criterion(outputs, labels)
 
             # get the stats again
@@ -83,14 +86,39 @@ def validate(model, dataloader, criterion, device):
 # Combining the two above now
 def train_model(model, trainloader, valloader, optimizer, criterion, device, epochs=10):
     model.to(device) # again CPU/GPU decision
+    total_train_time, total_val_time = 0.0, 0.0 # initialize "time stamps"
 
     for epoch in range(epochs):
         print(f"\nEpoch {epoch+1}/{epochs}")
-
+        
+        # Training + timing
+        torch.cuda.synchronize() if device.type == "cuda" else None # just necessary so we dont measure waiting times for the GPU only
+        t0 = time.perf_counter()
+        
         train_loss, train_acc = train_one_epoch(model, trainloader, optimizer, criterion, device)
+        
+        torch.cuda.synchronize() if device.type == "cuda" else None
+        t1 = time.perf_counter()
+        train_time = t1 - t0
+        total_train_time += train_time
+
+        # Validation + timing
+        torch.cuda.synchronize() if device.type == "cuda" else None
+        t0 = time.perf_counter()
+
         val_loss, val_acc = validate(model, valloader, criterion, device)
+        
+        torch.cuda.synchronize() if device.type == "cuda" else None
+        t1 = time.perf_counter()
+        val_time = t1 - t0
+        total_val_time += val_time
 
         print(f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f}")
+        print(f"Train Time: {train_time:.2f}s")
         print(f"Val   Loss: {val_loss:.4f} | Val   Acc: {val_acc:.4f}")
+        print(f"Val   Time: {val_time:.2f}s")
+    
+    print(f"\nTotal Training Time  : {total_train_time:.2f}s")
+    print(f"Total Validation Time: {total_val_time:.2f}s")
 
     return model
