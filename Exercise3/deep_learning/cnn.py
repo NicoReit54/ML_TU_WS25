@@ -6,7 +6,7 @@ import torch.nn as nn
 # https://docs.pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 # https://www.geeksforgeeks.org/deep-learning/building-a-convolutional-neural-network-using-pytorch/
 # https://stackoverflow.com/questions/79228528/i-am-trying-to-create-multiscale-cnn-but-facing-this-error-runtimeerror-mat1
-
+# https://discuss.pytorch.org/t/how-to-create-convnet-for-variable-size-input-dimension-images/1906 / https://medium.com/@benjybo7/7-pytorch-pool-methods-you-should-be-using-495eb00325d6
 
 class SimpleCNN(nn.Module):
     """
@@ -19,8 +19,8 @@ class SimpleCNN(nn.Module):
     def __init__(self,
                  in_channels: int = 3, 
                  num_classes: int = 10,
-                 input_size: int = 32, 
-                 base_channels: int = 32,
+                 input_size: int = 32, # used before we decided for GAP to allow for variable input sizes
+                 base_channels: int = 32, # choice was somewhat arbitrary
                  channel_multiplier: int = 2) -> None:
         '''
         Initializes the CNN model with convolutional layers.
@@ -39,7 +39,7 @@ class SimpleCNN(nn.Module):
         super().__init__()
 
         # precompute the channels and sizes after each conv layer 
-        c1 = base_channels 
+        c1 = base_channels # we basically decide how many neurons we want to have after the application of the first layer (applying basically ten kernels/filters)
         c2 = c1 * channel_multiplier 
         c3 = c2 * channel_multiplier
 
@@ -51,58 +51,36 @@ class SimpleCNN(nn.Module):
                       kernel_size=3, padding=1), # kernel size 3 kind of standard, but also the picutres are not too high-res. With padding=1 this preserves the size
 
             nn.ReLU(),
-            # Subsampling(Pooling) layer: replaces 2D patches by their maximum (“max-pooling”). It reduces the size of
+            # Subsampling(Pooling) layer: replaces 2D patches by their maximum (“max-pooling”). It reduces ("folds") the size of
             # feature maps (i.e. here the output of a convolution layer and thus the input to the next layer)
-            nn.MaxPool2d(kernel_size=2),  # ie for CIFAR: reduces size by two -> (32, 16, 16)
+            nn.MaxPool2d(kernel_size=2),  # ie for CIFAR: reduces size by two -> (batch_size, 32, 16, 16)
 
             nn.Conv2d(in_channels = c1, 
                       out_channels = c2, 
                       kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2),  # ie for CIFAR -> (64, 8, 8)
+            nn.MaxPool2d(kernel_size=2),  # ie for CIFAR -> (batch_size, 64, 8, 8)
 
             nn.Conv2d(in_channels = c2, 
                       out_channels = c3, 
                       kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2)  # ie for CIFAR -> (128, 4, 4)
+            nn.MaxPool2d(kernel_size=2)  # ie for CIFAR -> (batch_size, 128, 4, 4)
         )
 
-        # Calculate the size of the flattened feature maps after the convolutional layers to define the first linear layer because
-        # the input size of the linear layer depends on the output size of the convolutional layers.
-        self.flattened_size = self._get_flattened_size(input_size, in_channels)
+        self.gap = nn.AdaptiveAvgPool2d((1,1))  # Global Average Pooling to reduce spatial dimensions to 1x1 to make the model flexible to different input sizes and it also reduces the number of parameters to train!
+        # Further it doesnt make a difference for classification if we average the values to one single value as classifcation cares about whether features are present not where they occur in the picture.
+        # ie for CIFAR -> (batch_size, 128, 1, 1)
 
         # Classifier part: representing the fully connected layers
         self.classifier = nn.Sequential(
-            nn.Linear(in_features=self.flattened_size, out_features=c3 * 2), # this here applies a linear transformation to the incoming data: y = xA^T + b
+            nn.Linear(in_features=c3, out_features=c3 * 2), # this here applies a linear transformation to the incoming data: y = xA^T + b
             nn.ReLU(),
             nn.Dropout(p=0.5), # Dropout randomly disables neurons during training to reduce overfitting, p=0.5 means 50% chance to disable a neuron
             nn.Linear(in_features=c3 * 2, out_features=num_classes)
             # out_features == num_classes, because we want to have one output per class for classification
             # So, e.g. 10 classes: The output will be a vector of size 10, where each element represents the score for each class.
         )
-
-    def _get_flattened_size(self, input_size: int, in_channels: int) -> int:
-        """
-        Computes the size of the flattened feature maps after the convolutional layers.
-
-        This is necessary to define the input size of the first fully connected layer.
-
-        :param input_size: Size (height/width) of the input images.
-        :type input_size: int
-        :param in_channels: Number of channels in the input images.
-        :type in_channels: int
-        :return: Size of the flattened feature maps.
-        :rtype: int
-        """
-
-        with torch.no_grad(): # We don't need gradients for this computation so lets speed it up
-            # Create a dummy input tensor with batch size 1 to pass the dummy input through the feature extractor
-            dummy_input = torch.zeros(1, in_channels, input_size, input_size)
-            features = self.features(dummy_input)
-
-        # Flatten the output and get its size
-        return features.numel()  # Total number of elements
 
     def forward(self, x):
         """
@@ -112,11 +90,14 @@ class SimpleCNN(nn.Module):
         # Apply the feature extractor layers
         x = self.features(x)
 
+        # Apply the Global Average Pooling defined above
+        x = self.gap(x) # (batch_size, c3, 1, 1) -> c3 for CIFAR: 128
+
         # Flatten all dimensions except batch size (it looks like: (batch_size, channels, height, width) before flattening)
         # to prepare for the fully connected layers stage
-        x = torch.flatten(x, start_dim=1)
+        x = torch.flatten(x, start_dim=1) # (batch_size, c3)
 
         # Apply the classifier layers
-        x = self.classifier(x) 
+        x = self.classifier(x) # (batch_size, num_classes)
 
         return x
