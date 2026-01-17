@@ -21,7 +21,8 @@ class SimpleAdaptiveCNN(nn.Module):
                  num_classes: int = 10,
                  input_size: int = 32, # used before we decided for GAP to allow for variable input sizes
                  base_channels: int = 32, # choice somewhat arbitrary
-                 channel_multiplier: int = 2) -> None:
+                 channel_multiplier: int = 2,
+                 dropout_rate: float = 0.5) -> None:
         '''
         Initializes the CNN model with convolutional layers.
 
@@ -35,6 +36,8 @@ class SimpleAdaptiveCNN(nn.Module):
         :type base_channels: int
         :param channel_multiplier: Factor by which the number of channels increases after each convolutional layer.
         :type channel_multiplier: int
+        :param dropout_rate: Dropout rate for the dropout layer to reduce overfitting.
+        :type dropout_rate: float
         '''
         super().__init__()
 
@@ -76,7 +79,7 @@ class SimpleAdaptiveCNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(in_features=c3, out_features=c3 * 2), # this here applies a linear transformation to the incoming data: y = xA^T + b
             nn.ReLU(),
-            nn.Dropout(p=0.5), # Dropout randomly disables neurons during training to reduce overfitting, p=0.5 means 50% chance to disable a neuron
+            nn.Dropout(p=dropout_rate), # Dropout randomly disables neurons during training to reduce overfitting, p=0.5 means 50% chance to disable a neuron
             nn.Linear(in_features=c3 * 2, out_features=num_classes)
             # out_features == num_classes, because we want to have one output per class for classification
             # So, e.g. 10 classes: The output will be a vector of size 10, where each element represents the score for each class.
@@ -119,7 +122,8 @@ class SimpleCNN(nn.Module):
                  num_classes: int = 10,
                  input_size: int = 32, 
                  base_channels: int = 32,
-                 channel_multiplier: int = 2) -> None:
+                 channel_multiplier: int = 2,
+                 dropout_rate: float = 0.5) -> None:
         '''
         Initializes the CNN model with convolutional layers.
 
@@ -133,6 +137,8 @@ class SimpleCNN(nn.Module):
         :type base_channels: int
         :param channel_multiplier: Factor by which the number of channels increases after each convolutional layer.
         :type channel_multiplier: int
+        :param dropout_rate: Dropout rate for the dropout layer to reduce overfitting.
+        :type dropout_rate: float
         '''
         super().__init__()
 
@@ -174,7 +180,7 @@ class SimpleCNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(in_features=self.flattened_size, out_features=c3 * 2), # this here applies a linear transformation to the incoming data: y = xA^T + b
             nn.ReLU(),
-            nn.Dropout(p=0.5), # Dropout randomly disables neurons during training to reduce overfitting, p=0.5 means 50% chance to disable a neuron
+            nn.Dropout(p=dropout_rate), # Dropout randomly disables neurons during training to reduce overfitting, p=dropout_rate means dropout_rate chance to disable a neuron
             nn.Linear(in_features=c3 * 2, out_features=num_classes)
             # out_features == num_classes, because we want to have one output per class for classification
             # So, e.g. 10 classes: The output will be a vector of size 10, where each element represents the score for each class.
