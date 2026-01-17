@@ -75,14 +75,20 @@ class CIFAR10(Dataset):
         self.x = np.asarray(data_dict["data"], dtype=np.uint8)      # (N, 3072) because each vector is stored as a  numpy array of 3072 uint8s
         self.y = np.asarray(data_dict["labels"], dtype=np.int64)    # (N,)
 
+        # Source https://www.ricardodecal.com/guides/use-these-normalization-values-for-torchvision-datasets/?utm_source=copilot.com
+        self.mean = torch.tensor([0.4914, 0.48216, 0.44653]).view(3,1,1)
+        self.std  = torch.tensor([0.2022, 0.19932, 0.20086]).view(3,1,1)
+
     def __len__(self) -> int:
         return len(self.y)
 
     def __getitem__(self, idx):
         flat = self.x[idx]  # (3072,)
+        
+        # CIFAR layout will be (3, 32, 32) when reshaped this way and 255 division normalizes to pixel range to [0, 1] cause uint8 pixel values in the range 0–255.
+        img = torch.from_numpy(flat).view(3, 32, 32).float() / 255
+        img = (img - self.mean) / self.std # now center to properly normalize
 
-        # CIFAR layout will be (3, 32, 32) when reshaped this way and 255 division normalizes to pixel range to [0, 1]
-        img = torch.from_numpy(flat).view(3, 32, 32).float() / 255.0
         label = torch.tensor(self.y[idx], dtype=torch.long)
 
         return img, label
