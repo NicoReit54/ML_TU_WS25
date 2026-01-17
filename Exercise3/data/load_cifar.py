@@ -68,14 +68,16 @@ class CIFAR10(Dataset):
     This class loads the CIFAR-10 data with the above defined methods and implements the required methods 
     __len__ and __getitem__.
     '''
-    def __init__(self, split: str = "train"):
+    def __init__(self, split: str = "train", transform=None):
         data_dict = retrieve_all_cifar(train_test=split)
 
         # Convert to numpy arrays for efficient reshape/indexing
         self.x = np.asarray(data_dict["data"], dtype=np.uint8)      # (N, 3072) because each vector is stored as a  numpy array of 3072 uint8s
         self.y = np.asarray(data_dict["labels"], dtype=np.int64)    # (N,)
 
-        # Source https://www.ricardodecal.com/guides/use-these-normalization-values-for-torchvision-datasets/?utm_source=copilot.com
+        self.transform = transform
+
+        # Source https://www.ricardodecal.com/guides/use-these-normalization-values-for-torchvision-datasets
         self.mean = torch.tensor([0.4914, 0.48216, 0.44653]).view(3,1,1)
         self.std  = torch.tensor([0.2022, 0.19932, 0.20086]).view(3,1,1)
 
@@ -85,8 +87,13 @@ class CIFAR10(Dataset):
     def __getitem__(self, idx):
         flat = self.x[idx]  # (3072,)
         
-        # CIFAR layout will be (3, 32, 32) when reshaped this way and 255 division normalizes to pixel range to [0, 1] cause uint8 pixel values in the range 0–255.
+        # CIFAR layout will be (3, 32, 32) when reshaped this way and 255 division brings the pixel range to [0, 1] cause uint8 pixel values in the range 0–255.
+        # For transform (https://docs.pytorch.org/vision/0.21/transforms.html): The expected range of the values of a tensor image is implicitly defined by the tensor dtype. Tensor images with a float dtype are expected to have values in [0, 1].
         img = torch.from_numpy(flat).view(3, 32, 32).float() / 255
+
+        if self.transform is not None: 
+            img = self.transform(img) # transform before normalizing
+
         img = (img - self.mean) / self.std # now center to properly normalize
 
         label = torch.tensor(self.y[idx], dtype=torch.long)
