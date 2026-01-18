@@ -7,6 +7,9 @@ import torch
 import random
 
 from torch.utils.data import Dataset
+from torchvision.transforms import v2
+
+IMG_SIZE = (64, 64) # decided to stay in line with base line configuration (sift needed it)
 
 GTSRB_CLASSES = {
     0: 'Speed 20', 1: 'Speed 30', 2: 'Speed 50', 3: 'Speed 60', 4: 'Speed 70', 
@@ -54,7 +57,7 @@ def load_gtsrb_data(base_path, mode="train", sample_fraction=1.0):
             for img_file in img_files:
                 img = cv2.imread(os.path.join(class_dir, img_file))
                 if img is not None:
-                    images.append(img)
+                    images.append(cv2.resize(img, IMG_SIZE))
                     labels.append(class_id)
 
     # LOGIC FOR TEST DATA (Flat folder + CSV Answer Key)
@@ -74,7 +77,6 @@ def load_gtsrb_data(base_path, mode="train", sample_fraction=1.0):
                 
         df = pd.read_csv(csv_file, sep=';')
 
-
         if sample_fraction < 1.0:
             df = df.sample(frac=sample_fraction, random_state=42)
 
@@ -84,7 +86,7 @@ def load_gtsrb_data(base_path, mode="train", sample_fraction=1.0):
             img_path = os.path.join(base_path, img_name)
             img = cv2.imread(img_path)
             if img is not None:
-                images.append(img)
+                images.append(cv2.resize(img, IMG_SIZE))
                 labels.append(class_id)
     else:
         raise ValueError(f"Unknown mode '{mode}'. Use 'train' or 'test'.")
@@ -131,14 +133,19 @@ def compute_mean_std_from_loader(base_path, split="train", sample_fraction=1.0):
 class GTSRB(Dataset):
     '''
     To make the dataset loader compatible with PyTorch's DataLoader class, we create a custom Dataset class.
-    This class loads the CIFAR-10 data with the above defined methods and implements the required methods 
+    This class loads the GTSRB data with the above defined methods and implements the required methods 
     __len__ and __getitem__.
     '''
     def __init__(self, base_path, split: str = "train", sample_fraction=1.0, transform=None):
         self.images, self.labels = load_gtsrb_data(base_path=base_path, mode=split, sample_fraction=sample_fraction)
         self.transform = transform
 
-        self.mean, self.std = 0.0, 0.0
+        # source: self extracted from training set with helper function above
+        self.mean = torch.tensor([0.3779, 0.3472, 0.3561]).view(3,1,1)
+        self.std  = torch.tensor([0.3005, 0.2944, 0.3008]).view(3,1,1)
+
+        # to get a tensor and as ToTensor is deprecated: https://docs.pytorch.org/vision/main/generated/torchvision.transforms.v2.ToTensor.html
+        self.base_transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -150,11 +157,12 @@ class GTSRB(Dataset):
         # OpenCV loads BGR: convert to RGB!
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         
+        # convert to tensor
+        img = self.base_transform(img)
+
         if self.transform is not None:
             img = self.transform(img)
         
         img = (img - self.mean) / self.std # now center to properly normalize
 
-        label = torch.tensor(label, dtype=torch.long)
-
-        return img, label
+        return img, torch.tensor(label, dtype=torch.long)
