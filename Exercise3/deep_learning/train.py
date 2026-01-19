@@ -2,6 +2,7 @@ import time
 import torch
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from pathlib import Path
 
 # Sources: 
 # https://docs.pytorch.org/tutorials/beginner/introyt/trainingyt.html 
@@ -159,13 +160,26 @@ def train_model(model, trainloader, valloader, optimizer, criterion, device, epo
     plt.grid(True)
 
     plt.tight_layout()
-    plt.show()
 
+    # Check if file and dir exist and also append version number
+    Path("cnn_training_curves").mkdir(exist_ok=True)
+
+    file_name = f"cnn_training_curves/training_curves_{model.__class__.__name__}.png"
+
+    base_path = Path(file_name)
+    if base_path.exists():
+        version = 1
+        while (base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}").exists():
+            version += 1
+        file_name = str(base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}")
+    
     # Try/catch for saving the figure because its more important to have the model than the plot
     try:
-        plt.savefig("training_curves.png", dpi=300)
+        plt.savefig(file_name, dpi=300)
     except Exception as e:
         print(f"Could not save the figure: {e}")
+    
+    plt.show()
 
 
     return model
