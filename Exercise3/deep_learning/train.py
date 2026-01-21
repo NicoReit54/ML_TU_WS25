@@ -182,4 +182,4 @@ def train_model(model, trainloader, valloader, optimizer, criterion, device, epo
     plt.show()
 
 
-    return model
+    return model, train_accuracies, val_accuracies
