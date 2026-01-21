@@ -251,6 +251,7 @@ def train_transfer_learning(
     )
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs_frozen)
     
+    best_acc = 0
     for epoch in range(epochs_frozen):
         print(f"\nEpoch {epoch+1}/{epochs_frozen}")
         
@@ -283,7 +284,15 @@ def train_transfer_learning(
         print(f"Train Time: {train_time:.2f}s")
         print(f"Val   Loss: {val_loss:.4f} | Val   Acc: {val_acc:.4f}")
         print(f"Val   Time: {val_time:.2f}s")
-    
+        
+        # Save best model
+        if val_acc > best_acc:
+            best_acc = val_acc
+            torch.save(model.state_dict(), save_path)
+            print(f"New best model saved! Val Acc: {best_acc:.4f}")
+        
+        best_acc = max(val_accuracies)
+        
     # ========== STAGE 2: Fine-tune last layers ==========
     print("\n" + "="*60)
     print("STAGE 2: Fine-tuning last layers")
@@ -335,7 +344,7 @@ def train_transfer_learning(
         if val_acc > best_acc:
             best_acc = val_acc
             torch.save(model.state_dict(), save_path)
-            print(f"✓ New best model saved! Val Acc: {best_acc:.4f}")
+            print(f"New best model saved! Val Acc: {best_acc:.4f}")
     
     # ========== Plot results ==========
     print(f"\nTotal Training Time  : {total_train_time:.2f}s")
