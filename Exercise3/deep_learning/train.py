@@ -165,7 +165,8 @@ def train_model(model, trainloader, valloader, optimizer, criterion, device, epo
     # Check if file and dir exist and also append version number
     Path("cnn_training_curves").mkdir(exist_ok=True)
 
-    file_name = f"cnn_training_curves/training_curves_{model.__class__.__name__}.png"
+    file_name = f"cnn_training_curves/{model.__class__.__name__}_training_curves.png"
+    file_name = str(Path(file_name))
 
     base_path = Path(file_name)
     if base_path.exists():

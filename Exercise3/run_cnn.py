@@ -66,8 +66,8 @@ def load_data(data_set, data_augmentation, batch_size=128) -> tuple[DataLoader, 
 
     # Create datasets
     if data_set == 'GTSRB':
-        training_path = "data/GTSRB/Final_Training/Images"
-        testing_path = "data/GTSRB/Final_Test/Images"
+        training_path = Path("data") / "GTSRB" / "Final_Training" / "Images"
+        testing_path = Path("data") / "GTSRB" / "Final_Test" / "Images"
 
         print("Loading GTSRB training dataset...")
         train_dataset = GTSRB(base_path=training_path, split="train", transform=train_transforms)

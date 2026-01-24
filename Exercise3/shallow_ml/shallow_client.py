@@ -25,8 +25,8 @@ from data.load_cifar import retrieve_all_cifar
 IMG_SIZE = (64, 64)
 VOCAB_SIZE = 100
 SEED = 42
-DEFAULT_GTSRB_TRAIN = "../data/GTSRB/Final_Training/Images"
-DEFAULT_GTSRB_TEST = "../data/GTSRB/Final_Test/Images"
+DEFAULT_GTSRB_TRAIN = os.path.join(project_root, "data", "GTSRB", "Final_Training", "Images")
+DEFAULT_GTSRB_TEST = os.path.join(project_root, "data", "GTSRB", "Final_Test", "Images")
 
 # ==========================================
 # 1. DATA LOADING
