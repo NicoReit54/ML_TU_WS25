@@ -25,18 +25,15 @@ from data.load_cifar import retrieve_all_cifar
 IMG_SIZE = (64, 64)
 VOCAB_SIZE = 100
 SEED = 42
-
-# Default Paths (Can be overridden by flags if needed, or hardcoded here)
-DEFAULT_GTSRB_TRAIN = r"C:\Users\lenar\Downloads\GTSRB_Final_Training_Images\GTSRB\Final_Training\Images"
-DEFAULT_GTSRB_TEST = r"C:\Users\lenar\Downloads\GTSRB_Final_Test_Images\GTSRB\Final_Test\Images"
+DEFAULT_GTSRB_TRAIN = "../data/GTSRB/Final_Training/Images"
+DEFAULT_GTSRB_TEST = "../data/GTSRB/Final_Test/Images"
 
 # ==========================================
 # 1. DATA LOADING
 # ==========================================
 def load_gtsrb_data(base_path: str, mode: str = "train", sample_fraction: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
     if not os.path.exists(base_path):
-        print(f"[ERROR] Path not found: {base_path}")
-        return np.array([]), np.array([])
+        raise FileNotFoundError(f"[ERROR] Path not found: {base_path}")
 
     images, labels = [], []
     
