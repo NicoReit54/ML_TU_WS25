@@ -55,13 +55,12 @@ To run transfer learning using a pre-trained model, you can use the `run_transfe
 TBD
 
 
-
 ## Usage of the helper methods
-To use the data loading functions, you import the `load_cifar.retrieve_all_cifar` module and call it according to what you need (either "test" or "train"). Or use the `CIFAR10` class directly to create an object compatible with PyTorch's DataLoader.
-For example:
+To use the data loading functions, you e.g. import the `load_cifar.retrieve_all_cifar` module and call it according to what you need (either "test" or "train"). Or use the `CIFAR10`/`GTSRB` classes  directly to create an object that is already compatible with PyTorch's DataLoader.
 
+For example for CIFAR-10:
 ```python
-from data.load_cifar import retrieve_all_cifar
+from data.load_cifar import retrieve_all_cifar, CIFAR10
 from torch.utils.data import DataLoader
 
 test_dict = retrieve_all_cifar(train_test="test")
@@ -69,14 +68,28 @@ train_dict = retrieve_all_cifar(train_test="train")
 
 len(test_dict["labels"]), len(train_dict["labels"])  # Should return (10000, 50000)
 
-from data.load_cifar import CIFAR10
-
 train_ds = CIFAR10(split="train")
 test_ds = CIFAR10(split="test")
 
-trainloader = DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=2, pin_memory=True)
-testloader = DataLoader(test_ds, batch_size=256, shuffle=False, num_workers=2, pin_memory=True)
+trainloader = DataLoader(train_ds, batch_size=128)
+testloader = DataLoader(test_ds, batch_size=256)
+```
 
+or for GTSRB:
+```python
+from data.load_gtsrb import GTSRB
+from torch.utils.data import DataLoader
+
+# Define paths to the GTSRB dataset
+training_path = "../data/GTSRB/Final_Training/Images"
+testing_path = "../data/GTSRB/Final_Test/Images"
+
+# Create datasets and show the Dataloader integration
+train_dataset = GTSRB(base_path=training_path, split="train", transform=None)
+test_dataset  = GTSRB(base_path=testing_path, split="test", transform=None)
+
+trainloader = DataLoader(train_dataset, batch_size=128)
+testloader = DataLoader(test_dataset, batch_size=256)
 ```
 
 ## Evaluation
@@ -93,6 +106,6 @@ evaluate_model(model=trained_model,
                dataloader=testloader,
                class_names=["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
                figsize=(10, 8),
-               device="cpu",
+               device=device,
                title="Model Evaluation Title")
 ```
