@@ -179,7 +179,5 @@ def train_model(model, trainloader, valloader, optimizer, criterion, device, epo
         plt.savefig(file_name, dpi=300)
     except Exception as e:
         print(f"Could not save the figure: {e}")
-    
-    plt.show()
 
-    return model
+    return model, train_accuracies, val_accuracies

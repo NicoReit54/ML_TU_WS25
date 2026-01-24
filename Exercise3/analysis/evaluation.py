@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from typing import Any
+from pathlib import Path
 from sklearn.metrics import confusion_matrix, classification_report
 
 
@@ -32,7 +33,7 @@ def evaluate_model(
 
     with torch.no_grad():
         for images, labels in dataloader:
-            images = images.to(device)
+            images = images.to(device) 
             labels = labels.to(device)
 
             outputs = model(images)
@@ -85,7 +86,25 @@ def evaluate_model(
     plt.ylabel("True label")
     plt.title(f"Confusion Matrix – {title}")
     plt.tight_layout()
-    plt.show()
+    
+    # Check if file and dir exist and also append version number
+    Path("cnn_confusion_matrix").mkdir(exist_ok=True)
+
+    file_name = f"cnn_confusion_matrix/cm_{model.__class__.__name__}.png"
+
+    base_path = Path(file_name)
+    if base_path.exists():
+        version = 1
+        while (base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}").exists():
+            version += 1
+        file_name = str(base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}")
+    
+    # Try/catch for saving the figure because its more important to have the model than the plot
+    try:
+        plt.savefig(file_name, dpi=300)
+    except Exception as e:
+        print(f"Could not save the figure: {e}")
+
 
     # Return metrics for comparison of multiple models
     return {
