@@ -37,7 +37,20 @@ from data.load_gtsrb import GTSRB_CLASSES, GTSRB
 
 from analysis.evaluation import evaluate_model
 
-def load_data(data_set, data_augmentation, batch_size=128):
+def load_data(data_set, data_augmentation, batch_size=128) -> tuple[DataLoader, DataLoader, torch.device]:
+    '''
+    Loads the specified dataset (GTSRB or CIFAR-10), applies data augmentation if specified, 
+    and returns the training and validation dataloaders along with the automatically detected device (GPU/CPU).    
+
+    :param data_set: Dataset to load ('GTSRB' or 'CIFAR').
+    :type data_set: str
+    :param data_augmentation: Whether to apply data augmentation.
+    :type data_augmentation: bool
+    :param batch_size: Batch size for dataloaders.
+    :type batch_size: int
+    :return: Training and validation dataloaders along with the device.
+    :rtype: tuple[DataLoader, DataLoader, device]
+    '''
     # Device selection
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
@@ -102,6 +115,9 @@ def load_data(data_set, data_augmentation, batch_size=128):
 
 
 def main():
+    '''
+    Main function to parse the arguments, set up the model accordingly, and initiate training (and evaluation if wanted).
+    '''
     parser = argparse.ArgumentParser(description="CNN Training and Classification Tool")
 
     # Configuration Flags ---
@@ -180,7 +196,13 @@ def main():
         epochs=epochs
         )
     print("Training completed.")    
+    print("Final Train Accuracy:", train_accuracies[-1])
+    print("Final Val   Accuracy:", val_accuracies[-1])
 
+    print("\nTrain Accuracies:", train_accuracies)
+    print("Val   Accuracies:", val_accuracies)
+
+    print("\nSaving trained model...")
     # Save the trained model and check for exisiting files/dirs 
     Path("cnn_trained_models").mkdir(exist_ok=True)
     file_name = f"cnn_trained_models/{model_name.lower()}.pth"
@@ -201,25 +223,8 @@ def main():
             class_names = GTSRB_CLASSES
         elif args.dataset == 'CIFAR':
             class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+       
         print("Evaluating trained model on validation set...")
-        trained_model.eval()
-
-        correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for images, labels in valloader:
-                images = images.to(device)
-                labels = labels.to(device)
-
-                outputs = trained_model(images)
-                _, preds = outputs.max(1)
-
-                correct += preds.eq(labels).sum().item()
-                total += labels.size(0)
-
-        print(f"Final validation accuracy: {correct / total:.4f}")
-
         evaluate_model(trained_model, valloader, device=device, class_names=class_names)
 
     del trained_model

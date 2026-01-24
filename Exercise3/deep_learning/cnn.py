@@ -124,7 +124,9 @@ class SimpleCNN(nn.Module):
                  input_size: int = 32, 
                  base_channels: int = 32,
                  channel_multiplier: int = 2,
-                 dropout_rate: float = 0.5) -> None:
+                 dropout_rate: float = 0.5,
+                 kernel_size: int = 3,
+                 padding: int = 1) -> None:
         '''
         Initializes the CNN model with convolutional layers.
 
@@ -140,6 +142,10 @@ class SimpleCNN(nn.Module):
         :type channel_multiplier: int
         :param dropout_rate: Dropout rate for the dropout layer to reduce overfitting.
         :type dropout_rate: float
+        :param kernel_size: Size of the convolutional kernel.
+        :type kernel_size: int
+        :param padding: Padding for the convolutional layers.
+        :type padding: int
         '''
         super().__init__()
 
@@ -153,7 +159,8 @@ class SimpleCNN(nn.Module):
             # E.g. Input shape for CIFAR-10: (batch_size, 3, 32, 32)
             nn.Conv2d(in_channels=in_channels, 
                       out_channels=c1, 
-                      kernel_size=3, padding=1), # kernel size 3 kind of standard, but also the picutres are not too high-res. With padding=1 this preserves the size
+                      kernel_size=kernel_size, 
+                      padding=padding), # kernel size 3 kind of standard, but also the picutres are not too high-res. With padding=1 this preserves the size
 
             nn.ReLU(),
             # Subsampling(Pooling) layer: replaces 2D patches by their maximum (“max-pooling”). It reduces the size of
@@ -162,13 +169,15 @@ class SimpleCNN(nn.Module):
 
             nn.Conv2d(in_channels = c1, 
                       out_channels = c2, 
-                      kernel_size=3, padding=1),
+                      kernel_size=kernel_size, 
+                      padding=padding),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2),  # ie for CIFAR -> (64, 8, 8)
 
             nn.Conv2d(in_channels = c2, 
                       out_channels = c3, 
-                      kernel_size=3, padding=1),
+                      kernel_size=kernel_size, 
+                      padding=padding),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2)  # ie for CIFAR -> (128, 4, 4)
         )
