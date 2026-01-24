@@ -1,4 +1,5 @@
 import time
+import time
 import torch
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -27,7 +28,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device):
         # Zero gradients for every batch: https://stackoverflow.com/questions/48001598/why-do-we-need-to-call-zero-grad-in-pytorch
         # (why? > In Pytorch gradients get accumulated by default due to some convenient
         # handling for other models. If not set Otherwise, the gradient would be a combination of the old gradient, 
-        # which you have already used to update your model parameters and the newly-computed gradient. 
+        # which we would have already used to update our model parameters and the newly-computed gradient. 
         # It would therefore point in some other direction than the intended direction towards the minimum)
         optimizer.zero_grad()
 

@@ -1,0 +1,118 @@
+============================================================
+FINAL PERFORMANCE SUMMARY (Sample Fraction: 1.0)
+============================================================
+| Model      |   Feat Time (s) |   Train Time (s) |   Test Time (s) |   Accuracy | Best Params                              |
+|:-----------|----------------:|-----------------:|----------------:|-----------:|:-----------------------------------------|
+| Hist + SVM |            0.74 |         12122.2  |         92.1804 |     0.4223 | {'C': 100, 'gamma': 0.1}                 |
+| Hist + RF  |            0.74 |            47.95 |          0.1717 |     0.415  | {'max_depth': None, 'n_estimators': 100} |
+| SIFT + SVM |           57.9  |          2542.65 |         27.6921 |     0.3119 | {'C': 1, 'gamma': 'scale'}               |
+| SIFT + RF  |           57.9  |            21.12 |          0.1074 |     0.2843 | {'max_depth': 20, 'n_estimators': 100}   |
+
+[INFO] Generating Detailed Classification Reports...
+
+============================================================
+FINAL REPORT: Hist + SVM
+============================================================
+Overall Accuracy: 0.4223
+
+Per-class Accuracy:
+               airplane: 0.538
+             automobile: 0.502
+                   bird: 0.317
+                    cat: 0.361
+                   deer: 0.357
+                    dog: 0.297
+...
+    accuracy                          0.422     10000
+   macro avg      0.421     0.422     0.420     10000
+weighted avg      0.421     0.422     0.420     10000
+
+============================================================
+FINAL REPORT: Hist + RF
+============================================================
+Overall Accuracy: 0.4150
+
+Per-class Accuracy:
+               airplane: 0.519
+             automobile: 0.503
+                   bird: 0.308
+                    cat: 0.337
+                   deer: 0.371
+                    dog: 0.254
+                   frog: 0.518
+                  horse: 0.378
+                   ship: 0.520
+                  truck: 0.442
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    airplane      0.502     0.519     0.511      1000
+  automobile      0.453     0.503     0.477      1000
+        bird      0.378     0.308     0.340      1000
+         cat      0.318     0.337     0.327      1000
+...
+    accuracy                          0.415     10000
+   macro avg      0.412     0.415     0.411     10000
+weighted avg      0.412     0.415     0.411     10000
+
+
+
+============================================================
+FINAL REPORT: SIFT + SVM
+============================================================
+Overall Accuracy: 0.3119
+
+Per-class Accuracy:
+               airplane: 0.353
+             automobile: 0.382
+                   bird: 0.258
+                    cat: 0.130
+                   deer: 0.158
+                    dog: 0.263
+                   frog: 0.414
+                  horse: 0.339
+                   ship: 0.373
+                  truck: 0.449
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    airplane      0.354     0.353     0.354      1000
+  automobile      0.349     0.382     0.365      1000
+        bird      0.267     0.258     0.262      1000
+         cat      0.193     0.130     0.155      1000
+...
+    accuracy                          0.312     10000
+   macro avg      0.303     0.312     0.305     10000
+weighted avg      0.303     0.312     0.305     10000
+
+
+============================================================
+FINAL REPORT: SIFT + RF
+============================================================
+Overall Accuracy: 0.2843
+
+Per-class Accuracy:
+               airplane: 0.366
+             automobile: 0.354
+                   bird: 0.213
+                    cat: 0.130
+                   deer: 0.124
+                    dog: 0.304
+                   frog: 0.359
+                  horse: 0.240
+                   ship: 0.333
+                  truck: 0.420
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    airplane      0.341     0.366     0.353      1000
+  automobile      0.293     0.354     0.321      1000
+        bird      0.254     0.213     0.232      1000
+         cat      0.201     0.130     0.158      1000
+...
+    accuracy                          0.284     10000
+   macro avg      0.277     0.284     0.276     10000
+weighted avg      0.277     0.284     0.276     10000

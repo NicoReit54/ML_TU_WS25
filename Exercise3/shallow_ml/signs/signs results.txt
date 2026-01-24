@@ -1,0 +1,116 @@
+signs results: 
+============================================================
+FINAL PERFORMANCE SUMMARY (Sample Fraction: 1.0)
+============================================================
+| Model      |   Feat Time (s) |   Train Time (s) |   Test Time (s) |   Accuracy | Best Params                              |
+|:-----------|----------------:|-----------------:|----------------:|-----------:|:-----------------------------------------|
+| Hist + SVM |            0.73 |          2998.87 |         92.7152 |     0.2131 | {'C': 100, 'gamma': 'scale'}             |
+| Hist + RF  |            0.73 |            84.94 |          0.2525 |     0.2527 | {'max_depth': None, 'n_estimators': 100} |
+| SIFT + SVM |           55.35 |          1072.61 |         36.1963 |     0.5161 | {'C': 1, 'gamma': 'scale'}               |
+| SIFT + RF  |           55.35 |            20.55 |          0.1626 |     0.4873 | {'max_depth': 20, 'n_estimators': 100}   |
+
+[INFO] Generating Detailed Classification Reports...
+
+============================================================
+FINAL REPORT: Hist + SVM
+============================================================
+Overall Accuracy: 0.2131
+
+Per-class Accuracy:
+               Speed 20: 0.083
+               Speed 30: 0.319
+               Speed 50: 0.160
+               Speed 60: 0.109
+               Speed 70: 0.245
+               Speed 80: 0.140
+...
+         accuracy                          0.213     12630
+        macro avg      0.197     0.158     0.168     12630
+     weighted avg      0.227     0.213     0.214     12630
+============================================================
+FINAL REPORT: Hist + RF
+============================================================
+Overall Accuracy: 0.2527
+
+Per-class Accuracy:
+               Speed 20: 0.000
+               Speed 30: 0.360
+               Speed 50: 0.252
+               Speed 60: 0.156
+               Speed 70: 0.282
+               Speed 80: 0.219
+           End Speed 80: 0.473
+              Speed 100: 0.233
+              Speed 120: 0.229
+             No passing: 0.127
+       No passing >3.5t: 0.455
+           Right-of-way: 0.095
+          Priority road: 0.526
+                  Yield: 0.281
+                   Stop: 0.307
+            No vehicles: 0.024
+       Veh >3.5t prohib: 0.347
+               No entry: 0.192
+...
+         accuracy                          0.253     12630
+        macro avg      0.223     0.177     0.185     12630
+     weighted avg      0.250     0.253     0.240     12630
+
+
+============================================================
+FINAL REPORT: SIFT + SVM
+============================================================
+Overall Accuracy: 0.5161
+
+Per-class Accuracy:
+               Speed 20: 0.167
+               Speed 30: 0.760
+               Speed 50: 0.721
+               Speed 60: 0.356
+               Speed 70: 0.356
+               Speed 80: 0.630
+           End Speed 80: 0.153
+              Speed 100: 0.602
+              Speed 120: 0.442
+             No passing: 0.608
+       No passing >3.5t: 0.682
+           Right-of-way: 0.693
+          Priority road: 0.672
+                  Yield: 0.728
+                   Stop: 0.667
+            No vehicles: 0.414
+       Veh >3.5t prohib: 0.607
+               No entry: 0.436
+...
+         accuracy                          0.516     12630
+        macro avg      0.556     0.396     0.433     12630
+     weighted avg      0.546     0.516     0.509     12630
+
+============================================================
+FINAL REPORT: SIFT + RF
+============================================================
+Overall Accuracy: 0.4873
+
+Per-class Accuracy:
+               Speed 20: 0.100
+               Speed 30: 0.694
+               Speed 50: 0.729
+               Speed 60: 0.318
+               Speed 70: 0.355
+               Speed 80: 0.663
+           End Speed 80: 0.113
+              Speed 100: 0.604
+              Speed 120: 0.364
+             No passing: 0.610
+       No passing >3.5t: 0.692
+           Right-of-way: 0.662
+          Priority road: 0.630
+                  Yield: 0.764
+                   Stop: 0.622
+            No vehicles: 0.219
+       Veh >3.5t prohib: 0.633
+               No entry: 0.439
+...
+         accuracy                          0.487     12630
+        macro avg      0.618     0.347     0.387     12630
+     weighted avg      0.553     0.487     0.474     12630
