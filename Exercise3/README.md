@@ -46,6 +46,7 @@ Following parameters can be specified via command line arguments and only `datas
 +    --data_augmentation: Enable/disable augmentation (default: True)
 +    --validation: Enable/disable validation output (default: True)
 
+**Example** (Please mind to run this from within the Exercise3 directory!)
 ```bash
 python run_cnn.py --epochs 20 --dataset CIFAR --channel_multiplier 2 --base_channels 32 --dropout_rate 0.1 --kernel_size 3 --padding 1 --batch_size 128 --data_augmentation True --validation True
 ```

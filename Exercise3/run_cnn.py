@@ -25,9 +25,6 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import v2
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
-
 # Local imports
 from deep_learning.cnn import SimpleCNN # TODO: Change SimpleCNN to accept the same as TestCNN
 from deep_learning.train import train_model
@@ -58,9 +55,10 @@ def load_data(data_set, data_augmentation, batch_size=128) -> tuple[DataLoader, 
     # Data Augmentation
     train_transforms = v2.Compose([
         v2.RandomHorizontalFlip(),
-        v2.RandomCrop(64, padding=4), # padding is ofc applied before cropping randomly
+        v2.RandomCrop(64 if data_set == 'GTSRB' else 32, padding=4), # padding is ofc applied before cropping randomly
         v2.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3)
     ])
+
     if data_augmentation:
         train_transforms = train_transforms
     else:
@@ -114,6 +112,29 @@ def load_data(data_set, data_augmentation, batch_size=128) -> tuple[DataLoader, 
     return trainloader, valloader, device
 
 
+def save_model(trained_model, model_name):
+    '''
+    Saves the trained model to disk with a generated unique filename to avoid overwriting existing models.
+    :param trained_model: The trained model to save.
+    :type trained_model: nn.Module
+    :param model_name: Base name for the model file.
+    :type model_name: str
+    '''
+    # Save the trained model and check for exisiting files/dirs 
+    Path("cnn_trained_models").mkdir(exist_ok=True)
+    file_name = f"cnn_trained_models/{model_name.lower()}.pth"
+    
+    # Check if file exists and append version number
+    base_path = Path(file_name)
+    if base_path.exists():
+        version = 1
+        while (base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}").exists():
+            version += 1
+        file_name = str(base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}")
+
+    torch.save(trained_model.state_dict(), file_name)
+    print("Saved trained model to:", file_name)
+
 def main():
     '''
     Main function to parse the arguments, set up the model accordingly, and initiate training (and evaluation if wanted).
@@ -130,8 +151,8 @@ def main():
     parser.add_argument("--padding", type=int, default=1, help="Padding.")
     parser.add_argument("--batch_size", type=int, default=128, help="Batch size.")
 
-    parser.add_argument("--data_augmentation", type=bool, default=True, help="True/False of whether data_augmentation shall be used")
-    parser.add_argument("--validation", type=bool, default=True, help="True/False of whether validation output should be produced (conf. matrix, ...)")
+    parser.add_argument("--data_augmentation", type=str, default="True", choices=['True', 'False'], help="True/False of whether data_augmentation shall be used")
+    parser.add_argument("--validation", type=str, default="True", choices=['True', 'False'], help="True/False of whether validation output should be produced (conf. matrix, ...)")
 
     args = parser.parse_args()
 
@@ -146,13 +167,13 @@ def main():
     kernel_size = int(args.kernel_size)
     padding = int(args.padding)
     batch_size = int(args.batch_size)
-    data_augmentation = bool(args.data_augmentation)
-    validation = bool(args.validation)
+    data_augmentation = True if str(args.data_augmentation) == 'True' else False
+    validation = True if str(args.validation) == 'True' else False
 
     # set appropriate input_size and load the data
     if args.dataset == 'GTSRB':
         input_size = 64
-        num_classes = len(GTSRB_CLASSES) # > Number of available output classes for classification.
+        num_classes = len(GTSRB_CLASSES)
     elif args.dataset == 'CIFAR':
         input_size = 32
         num_classes = 10
@@ -169,9 +190,20 @@ def main():
         padding=padding,
         input_size=input_size
     )
-    model_name = f"SimpleCNN_{args.dataset}_bs{batch_size}_ep{epochs}_cm{channel_multiplier}_bc{base_channels}_dr{dropout_rate}_ks{kernel_size}_pad{padding}"
+    model_name = f"SimpleCNN_{args.dataset}_bs{batch_size}_ep{epochs}_cm{channel_multiplier}_bc{base_channels}_dr{dropout_rate*10}_ks{kernel_size}_pad{padding}"
     
+    print("="*70)
     print(f"Training model: {model_name}")
+    print("With the following parameters:")
+    print(f"  - Base channels: {base_channels}")
+    print(f"  - Channel multiplier: {channel_multiplier}")
+    print(f"  - Dropout rate: {dropout_rate}")
+    print(f"  - Kernel size: {kernel_size}")
+    print(f"  - Padding: {padding}")
+    print(f"  - Batch size: {batch_size}")
+    print(f"  - Data augmentation: {data_augmentation}")
+    print(f"  - Epochs: {epochs}")
+    print("="*70)
     # Set the model to the device (GPU/CPU)
     model = model.to(device)
     print(model)
@@ -203,31 +235,21 @@ def main():
     print("Val   Accuracies:", val_accuracies)
 
     print("\nSaving trained model...")
-    # Save the trained model and check for exisiting files/dirs 
-    Path("cnn_trained_models").mkdir(exist_ok=True)
-    file_name = f"cnn_trained_models/{model_name.lower()}.pth"
-    
-    # Check if file exists and append version number
-    base_path = Path(file_name)
-    if base_path.exists():
-        version = 1
-        while (base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}").exists():
-            version += 1
-        file_name = str(base_path.parent / f"{base_path.stem}_v{version}{base_path.suffix}")
+    save_model(trained_model, model_name)
 
-    torch.save(trained_model.state_dict(), file_name)
-    print("Saved trained model to:", file_name)
-    
     if validation:
         if args.dataset == 'GTSRB':
             class_names = GTSRB_CLASSES
+            class_names = list(class_names.values()) # get only the names from the dict
         elif args.dataset == 'CIFAR':
             class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-       
-        print("Evaluating trained model on validation set...")
+
+        print("="*70)
+        print("\nEvaluating trained model on validation set...")
         evaluate_model(trained_model, valloader, device=device, class_names=class_names)
 
     del trained_model
 
 if __name__ == "__main__":
     main()
+
