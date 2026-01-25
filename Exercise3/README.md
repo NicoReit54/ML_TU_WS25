@@ -73,38 +73,42 @@ Following parameters can be specified via command line arguments and only `--dat
 
 ### Dataset and Dirs
 + `--dataset`: `'cifar10'` or `'gtsrb'` (required)  
-+ `--data-dir`: Path to dataset directory (default: `./data`)  
-+ `--sample-fraction`: Fraction of GTSRB data to use (default: `1.0`)
++ `--data_dir`: Path to dataset directory (default: `./data`)  
++ `--sample_fraction`: Fraction of GTSRB data to use (default: `1.0`)
 
 ### Model Arguments
 + `--dropout`: Dropout rate for classifier head (default: `0.3`)  
 + `--pretrained`: Use ImageNet pretrained weights (default: `True`)  
-+ `--no-pretrained`: Disable pretrained weights and train from scratch
++ `--no_pretrained`: Disable pretrained weights and train from scratch
 
 ### Training Arguments
-+ `--batch-size`: Batch size for training (default: `64`)  
-+ `--epochs-frozen`: Epochs with frozen EfficientNet backbone (default: `5`)  
-+ `--epochs-unfrozen`: Epochs with unfrozen layers for fine‑tuning (default: `10`)  
-+ `--lr-frozen`: Learning rate for frozen stage (default: `1e-3`)  
-+ `--lr-unfrozen`: Learning rate for unfrozen stage (default: `1e-4`)  
-+ `--num-workers`: Number of dataloader workers (default: `2`)
++ `--batch_size`: Batch size for training (default: `64`)  
++ `--epochs_frozen`: Epochs with frozen EfficientNet backbone (default: `5`)  
++ `--epochs_unfrozen`: Epochs with unfrozen layers for fine‑tuning (default: `10`)  
++ `--lr_frozen`: Learning rate for frozen stage (default: `1e-3`)  
++ `--lr_unfrozen`: Learning rate for unfrozen stage (default: `1e-4`)  
++ `--num_workers`: Number of dataloader workers (default: `2`)
 
 ### Output Arguments
-+ `--save-dir`: Directory to store checkpoints and plots (default: `./outputs`)  
-+ `--model-name`: Custom filename for the saved model (default: auto‑generated)
++ `--save_dir`: Directory to store checkpoints and plots (default: `./outputs`)  
++ `--model_name`: Custom filename for the saved model (default: auto‑generated)
 
 ### Evaluation Arguments
-+ `--eval-only`: Run evaluation without training  
-+ `--load-model`: Path to a model checkpoint to load
++ `--eval_only`: Run evaluation without training  
++ `--load_model`: Path to a model checkpoint to load
 
 ### Device & Reproducibility
 + `--device`: `'cuda'`, `'cpu'`, `'mps'`, or `'auto'` (default: `auto`)  
 + `--seed`: Random seed (default: `42`)
 
 
-### Example (Please mind to run this from within the Exercise3 directory!)
+### Example of training (Please mind to run this from within the Exercise3 directory!)
 ```bash
-python train.py --dataset cifar10  --batch-size 64 --epochs-frozen 5 --epochs-unfrozen 10 --lr-frozen 1e-3 --lr-unfrozen 1e-4 --device auto
+python train.py --dataset cifar10  --batch_size 64 --epochs_frozen 5 --epochs_unfrozen 10 --lr_frozen 1e-3 --lr_unfrozen 1e-4 --device auto
+```
+### Example of evaluation (Please mind to run this from within the Exercise3 directory!)
+```bash
+python train_transfer_learning.py --dataset cifar10 --eval_only --load_model outputs/model_name.pth
 ```
 
 ## Usage of the helper methods
