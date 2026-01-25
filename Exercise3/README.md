@@ -30,7 +30,21 @@ pip install -r requirements.txt
 ```
 
 ## Running the Shallow Model
-TBD
+You can run the shallow learning evaluation (SVM and Random Forest with Histograms/SIFT) by executing the `shallow_client.py` script. Following parameters can be specified via command line arguments and only `--dataset` is required:
+General Arguments
++ `--dataset`: 'GTSRB' or 'CIFAR' (required)
++ `--models`: List of models to run. Options: 'RF_HIST', 'RF_SIFT', 'SVM_HIST', 'SVM_SIFT', or 'ALL' (default: 'ALL')
++ `--sample_frac`: Fraction of data to use (0.0 - 1.0). Use 1.0 for full training (default: 0.1)
++ `--result`: Metric to print. Options: 'accuracy', 'f1', 'precision', 'recall', 'all' (default: 'all')
+Hyperparameters (Random Forest)
++ `--n_estimators`: Number of trees in the forest (default: 100)
++ `--max_depth`: Maximum depth of the trees (default: None)
+Hyperparameters (SVM)
++ `--C`: Regularization parameter (default: 1.0)
++ `--gamma`: Kernel coefficient. Accepts float or 'scale' (default: 'scale')
+```bash
+python shallow_client.py --dataset GTSRB --models SVM_SIFT --sample_frac 1.0 --result f1 --C 10.0 --gamma 0.01
+```
 
 ## Running the CNN Training and Evaluation
 You can run the CNN training and evaluation by executing the `run_cnn.py` script. 
