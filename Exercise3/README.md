@@ -34,27 +34,62 @@ TBD
 
 ## Running the CNN Training and Evaluation
 You can run the CNN training and evaluation by executing the `run_cnn.py` script. 
-Following parameters can be specified via command line arguments and only `dataset` is required:
-+    --dataset: 'GTSRB' or 'CIFAR' (required)
-+    --epochs: Number of training epochs (default: 10)
-+    --channel_multiplier: Channel growth factor per conv layer (default: 2)
-+    --base_channels: Initial channels in first conv layer (default: 32)
-+    --dropout_rate: Dropout rate for regularization (default: 0.5)
-+    --kernel_size: Convolution kernel size (default: 3)
-+    --padding: Padding for convolutions (default: 1)
-+    --batch_size: Batch size for dataloaders (default: 128)
-+    --data_augmentation: Enable/disable augmentation (default: True)
-+    --validation: Enable/disable validation output (default: True)
+Following parameters can be specified via command line arguments and only `--dataset` is required:
++ `--dataset`: 'GTSRB' or 'CIFAR' (required)
++ `--epochs`: Number of training epochs (default: 10)
++ `--channel_multiplier`: Channel growth factor per conv layer (default: 2)
++  `--base_channels`: Initial channels in first conv layer (default: 32)
++ `--dropout_rate`: Dropout rate for regularization (default: 0.5)
++ `--kernel_size`: Convolution kernel size (default: 3)
++ `--padding`: Padding for convolutions (default: 1)
++ `--batch_size`: Batch size for dataloaders (default: 128)
++ `--data_augmentation`: Enable/disable augmentation (default: True)
++  `--validation`: Enable/disable validation output (default: True)
 
-**Example** (Please mind to run this from within the Exercise3 directory!)
+### Example (Please mind to run this from within the Exercise3 directory!)
 ```bash
 python run_cnn.py --epochs 20 --dataset CIFAR --channel_multiplier 2 --base_channels 32 --dropout_rate 0.1 --kernel_size 3 --padding 1 --batch_size 128 --data_augmentation True --validation True
 ```
 
 ## Running the Transfer Learning
-To run transfer learning using a pre-trained model, you can use the `run_transfer_learning.py` script. Similar command line arguments can be specified as in `run_cnn.py`, with the addition of
-TBD
+You can run the (EfficientNet‑B0) training and evaluation by executing the `run_transfer_learning.py` script.  
+Following parameters can be specified via command line arguments and only `--dataset` is required:
 
+### Dataset and Dirs
++ `--dataset`: `'cifar10'` or `'gtsrb'` (required)  
++ `--data-dir`: Path to dataset directory (default: `./data`)  
++ `--sample-fraction`: Fraction of GTSRB data to use (default: `1.0`)
+
+### Model Arguments
++ `--dropout`: Dropout rate for classifier head (default: `0.3`)  
++ `--pretrained`: Use ImageNet pretrained weights (default: `True`)  
++ `--no-pretrained`: Disable pretrained weights and train from scratch
+
+### Training Arguments
++ `--batch-size`: Batch size for training (default: `64`)  
++ `--epochs-frozen`: Epochs with frozen EfficientNet backbone (default: `5`)  
++ `--epochs-unfrozen`: Epochs with unfrozen layers for fine‑tuning (default: `10`)  
++ `--lr-frozen`: Learning rate for frozen stage (default: `1e-3`)  
++ `--lr-unfrozen`: Learning rate for unfrozen stage (default: `1e-4`)  
++ `--num-workers`: Number of dataloader workers (default: `2`)
+
+### Output Arguments
++ `--save-dir`: Directory to store checkpoints and plots (default: `./outputs`)  
++ `--model-name`: Custom filename for the saved model (default: auto‑generated)
+
+### Evaluation Arguments
++ `--eval-only`: Run evaluation without training  
++ `--load-model`: Path to a model checkpoint to load
+
+### Device & Reproducibility
++ `--device`: `'cuda'`, `'cpu'`, `'mps'`, or `'auto'` (default: `auto`)  
++ `--seed`: Random seed (default: `42`)
+
+
+### Example (Please mind to run this from within the Exercise3 directory!)
+```bash
+python train.py --dataset cifar10  --batch-size 64 --epochs-frozen 5 --epochs-unfrozen 10 --lr-frozen 1e-3 --lr-unfrozen 1e-4 --device auto
+```
 
 ## Usage of the helper methods
 To use the data loading functions, you e.g. import the `load_cifar.retrieve_all_cifar` module and call it according to what you need (either "test" or "train"). Or use the `CIFAR10`/`GTSRB` classes  directly to create an object that is already compatible with PyTorch's DataLoader.
