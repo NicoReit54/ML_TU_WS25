@@ -36,7 +36,7 @@ You can run the shallow learning evaluation (SVM and Random Forest with Histogra
 + `--models`: List of models to run. Options: 'RF_HIST', 'RF_SIFT', 'SVM_HIST', 'SVM_SIFT', or 'ALL' (default: 'ALL')
 + `--sample_frac`: Fraction of data to use (0.0 - 1.0). Use 1.0 for full training (default: 0.1)
 + `--result`: Metric to print. Options: 'accuracy', 'f1', 'precision', 'recall', 'all' (default: 'all')
-###Hyperparameters (Random Forest)
+### Hyperparameters (Random Forest)
 + `--n_estimators`: Number of trees in the forest (default: 100)
 + `--max_depth`: Maximum depth of the trees (default: None)
 ### Hyperparameters (SVM)
