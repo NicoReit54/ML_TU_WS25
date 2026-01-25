@@ -19,9 +19,9 @@ def parse_args():
     parser.add_argument('--dataset', type=str, required=True, 
                        choices=['cifar10', 'gtsrb'],
                        help='Dataset to use for training')
-    parser.add_argument('--data-dir', type=str, default='./data',
+    parser.add_argument('--data_dir', type=str, default='./data',
                        help='Data directory (used for GTSRB path)')
-    parser.add_argument('--sample-fraction', type=float, default=1.0,
+    parser.add_argument('--sample_fraction', type=float, default=1.0,
                        help='Fraction of GTSRB data to use (1.0 = all data)')
     
     # Model arguments
@@ -29,33 +29,33 @@ def parse_args():
                        help='Dropout rate for classifier head')
     parser.add_argument('--pretrained', action='store_true', default=True,
                        help='Use ImageNet pretrained weights')
-    parser.add_argument('--no-pretrained', dest='pretrained', action='store_false',
+    parser.add_argument('--no_pretrained', dest='pretrained', action='store_false',
                        help='Train from scratch without pretrained weights')
     
     # Training arguments
-    parser.add_argument('--batch-size', type=int, default=64,
+    parser.add_argument('--batch_size', type=int, default=64,
                        help='Batch size for training')
-    parser.add_argument('--epochs-frozen', type=int, default=5,
+    parser.add_argument('--epochs_frozen', type=int, default=5,
                        help='Epochs to train with frozen backbone')
-    parser.add_argument('--epochs-unfrozen', type=int, default=10,
+    parser.add_argument('--epochs_unfrozen', type=int, default=10,
                        help='Epochs to fine-tune with unfrozen layers')
-    parser.add_argument('--lr-frozen', type=float, default=1e-3,
+    parser.add_argument('--lr_frozen', type=float, default=1e-3,
                        help='Learning rate for frozen stage')
-    parser.add_argument('--lr-unfrozen', type=float, default=1e-4,
+    parser.add_argument('--lr_unfrozen', type=float, default=1e-4,
                        help='Learning rate for unfrozen stage')
-    parser.add_argument('--num-workers', type=int, default=2,
+    parser.add_argument('--num_workers', type=int, default=2,
                        help='Number of data loading workers')
     
     # Output arguments
-    parser.add_argument('--save-dir', type=str, default='./outputs',
+    parser.add_argument('--save_dir', type=str, default='./outputs',
                        help='Directory to save model and plots')
-    parser.add_argument('--model-name', type=str, default=None,
+    parser.add_argument('--model_name', type=str, default=None,
                        help='Model filename (default: efficientnet_b0_{dataset}.pth)')
     
     # Evaluation arguments
-    parser.add_argument('--eval-only', action='store_true',
+    parser.add_argument('--eval_only', action='store_true',
                        help='Only evaluate a trained model')
-    parser.add_argument('--load-model', type=str, default=None,
+    parser.add_argument('--load_model', type=str, default=None,
                        help='Path to model checkpoint to load')
     
     # Device arguments
@@ -135,7 +135,7 @@ def main():
     # Evaluation only or training
     if args.eval_only:
         if args.load_model is None:
-            raise ValueError("--eval-only requires --load-model to specify checkpoint")
+            raise ValueError("--eval_only requires --load_model to specify checkpoint")
         
         print("\n" + "="*60)
         print("EVALUATION MODE")
