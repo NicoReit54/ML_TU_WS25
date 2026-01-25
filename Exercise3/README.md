@@ -13,9 +13,10 @@ Exercise3/
 │   ├── train_transfer_learning.py  # Module for transfer learning using pre-trained models
 │   └── cnn_transfer_learning.py    # Implementation of transfer learning with CNNs
 │── shallow_ml/
-│   ├── shallow_client.py           # Implementation of a shallow machine learning model
+│   ├── hist_sift_svm_rf.py           # Implementation of a shallow machine learning model
 │── analysis/
 │   └── evaluation.py               # Module for evaluating model performance
+|── run_shallow.py                  # Script to train and evaluate the shallow models
 │── run_cnn.py                      # Script to train and evaluate the CNN model
 │── run_transfer_learning.py        # Script to perform transfer learning using a pre-trained model
 │── requirements.txt                # List of required Python packages
@@ -30,7 +31,22 @@ pip install -r requirements.txt
 ```
 
 ## Running the Shallow Model
-TBD
+You can run the shallow learning evaluation (SVM and Random Forest with Histograms/SIFT) by executing the `shallow_client.py` script. Following parameters can be specified via command line arguments and only `--dataset` is required:
+### General Arguments
++ `--dataset`: 'GTSRB' or 'CIFAR' (required)
++ `--models`: List of models to run. Options: 'RF_HIST', 'RF_SIFT', 'SVM_HIST', 'SVM_SIFT', or 'ALL' (default: 'ALL')
++ `--sample_frac`: Fraction of data to use (0.0 - 1.0). Use 1.0 for full training (default: 0.1)
++ `--result`: Metric to print. Options: 'accuracy', 'f1', 'precision', 'recall', 'all' (default: 'all')
+### Hyperparameters (Random Forest)
++ `--n_estimators`: Number of trees in the forest (default: 100)
++ `--max_depth`: Maximum depth of the trees (default: None)
+### Hyperparameters (SVM)
++ `--C`: Regularization parameter (default: 1.0)
++ `--gamma`: Kernel coefficient. Accepts float or 'scale' (default: 'scale')
+### Example (Please mind to run this from within the Exercise3 directory!)
+```bash
+python run_shallow.py --dataset GTSRB --models SVM_SIFT --sample_frac 1.0 --result f1 --C 10.0 --gamma 0.01
+```
 
 ## Running the CNN Training and Evaluation
 You can run the CNN training and evaluation by executing the `run_cnn.py` script. 
@@ -57,38 +73,42 @@ Following parameters can be specified via command line arguments and only `--dat
 
 ### Dataset and Dirs
 + `--dataset`: `'cifar10'` or `'gtsrb'` (required)  
-+ `--data-dir`: Path to dataset directory (default: `./data`)  
-+ `--sample-fraction`: Fraction of GTSRB data to use (default: `1.0`)
++ `--data_dir`: Path to dataset directory (default: `./data`)  
++ `--sample_fraction`: Fraction of GTSRB data to use (default: `1.0`)
 
 ### Model Arguments
 + `--dropout`: Dropout rate for classifier head (default: `0.3`)  
 + `--pretrained`: Use ImageNet pretrained weights (default: `True`)  
-+ `--no-pretrained`: Disable pretrained weights and train from scratch
++ `--no_pretrained`: Disable pretrained weights and train from scratch
 
 ### Training Arguments
-+ `--batch-size`: Batch size for training (default: `64`)  
-+ `--epochs-frozen`: Epochs with frozen EfficientNet backbone (default: `5`)  
-+ `--epochs-unfrozen`: Epochs with unfrozen layers for fine‑tuning (default: `10`)  
-+ `--lr-frozen`: Learning rate for frozen stage (default: `1e-3`)  
-+ `--lr-unfrozen`: Learning rate for unfrozen stage (default: `1e-4`)  
-+ `--num-workers`: Number of dataloader workers (default: `2`)
++ `--batch_size`: Batch size for training (default: `64`)  
++ `--epochs_frozen`: Epochs with frozen EfficientNet backbone (default: `5`)  
++ `--epochs_unfrozen`: Epochs with unfrozen layers for fine‑tuning (default: `10`)  
++ `--lr_frozen`: Learning rate for frozen stage (default: `1e-3`)  
++ `--lr_unfrozen`: Learning rate for unfrozen stage (default: `1e-4`)  
++ `--num_workers`: Number of dataloader workers (default: `2`)
 
 ### Output Arguments
-+ `--save-dir`: Directory to store checkpoints and plots (default: `./outputs`)  
-+ `--model-name`: Custom filename for the saved model (default: auto‑generated)
++ `--save_dir`: Directory to store checkpoints and plots (default: `./outputs`)  
++ `--model_name`: Custom filename for the saved model (default: auto‑generated)
 
 ### Evaluation Arguments
-+ `--eval-only`: Run evaluation without training  
-+ `--load-model`: Path to a model checkpoint to load
++ `--eval_only`: Run evaluation without training  
++ `--load_model`: Path to a model checkpoint to load
 
 ### Device & Reproducibility
 + `--device`: `'cuda'`, `'cpu'`, `'mps'`, or `'auto'` (default: `auto`)  
 + `--seed`: Random seed (default: `42`)
 
 
-### Example (Please mind to run this from within the Exercise3 directory!)
+### Example of training (Please mind to run this from within the Exercise3 directory!)
 ```bash
-python train.py --dataset cifar10  --batch-size 64 --epochs-frozen 5 --epochs-unfrozen 10 --lr-frozen 1e-3 --lr-unfrozen 1e-4 --device auto
+python train.py --dataset cifar10  --batch_size 64 --epochs_frozen 5 --epochs_unfrozen 10 --lr_frozen 1e-3 --lr_unfrozen 1e-4 --device auto
+```
+### Example of evaluation (Please mind to run this from within the Exercise3 directory!)
+```bash
+python train_transfer_learning.py --dataset cifar10 --eval_only --load_model outputs/model_name.pth
 ```
 
 ## Usage of the helper methods
