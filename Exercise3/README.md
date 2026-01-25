@@ -13,9 +13,10 @@ Exercise3/
 │   ├── train_transfer_learning.py  # Module for transfer learning using pre-trained models
 │   └── cnn_transfer_learning.py    # Implementation of transfer learning with CNNs
 │── shallow_ml/
-│   ├── shallow_client.py           # Implementation of a shallow machine learning model
+│   ├── hist_sift_svm_rf.py           # Implementation of a shallow machine learning model
 │── analysis/
 │   └── evaluation.py               # Module for evaluating model performance
+|── run_shallow.py                  # Script to train and evaluate the shallow models
 │── run_cnn.py                      # Script to train and evaluate the CNN model
 │── run_transfer_learning.py        # Script to perform transfer learning using a pre-trained model
 │── requirements.txt                # List of required Python packages
@@ -42,8 +43,9 @@ You can run the shallow learning evaluation (SVM and Random Forest with Histogra
 ### Hyperparameters (SVM)
 + `--C`: Regularization parameter (default: 1.0)
 + `--gamma`: Kernel coefficient. Accepts float or 'scale' (default: 'scale')
+### Example (Please mind to run this from within the Exercise3 directory!)
 ```bash
-python shallow_client.py --dataset GTSRB --models SVM_SIFT --sample_frac 1.0 --result f1 --C 10.0 --gamma 0.01
+python run_shallow.py --dataset GTSRB --models SVM_SIFT --sample_frac 1.0 --result f1 --C 10.0 --gamma 0.01
 ```
 
 ## Running the CNN Training and Evaluation

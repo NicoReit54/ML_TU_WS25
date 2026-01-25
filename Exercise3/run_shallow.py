@@ -6,7 +6,8 @@ import time
 import random
 import pandas as pd
 import argparse
-from typing import Tuple, List, Dict, Any
+from pathlib import Path
+from typing import Tuple
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
@@ -15,22 +16,20 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
 
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(script_dir)
+script_dir = Path(__file__).resolve().parent
 
-if project_root not in sys.path:
-    sys.path.append(project_root)
+if str(script_dir) not in sys.path:
+    sys.path.append(str(script_dir))
+
 from data.load_cifar import retrieve_all_cifar
 
 IMG_SIZE = (64, 64)
 VOCAB_SIZE = 100
 SEED = 42
-DEFAULT_GTSRB_TRAIN = os.path.join(project_root, "data", "GTSRB", "Final_Training", "Images")
-DEFAULT_GTSRB_TEST = os.path.join(project_root, "data", "GTSRB", "Final_Test", "Images")
+DEFAULT_GTSRB_TRAIN = script_dir / "data" / "GTSRB" / "Final_Training" / "Images"
+DEFAULT_GTSRB_TEST = script_dir / "data" / "GTSRB" / "Final_Test" / "Images"
 
-# ==========================================
 # 1. DATA LOADING
-# ==========================================
 def load_gtsrb_data(base_path: str, mode: str = "train", sample_fraction: float = 1.0) -> Tuple[np.ndarray, np.ndarray]:
     if not os.path.exists(base_path):
         raise FileNotFoundError(f"[ERROR] Path not found: {base_path}")
@@ -101,9 +100,7 @@ def load_cifar_adapter(sample_fraction: float = 1.0) -> Tuple[np.ndarray, np.nda
     X_processed = [cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), IMG_SIZE) for img in X_images]
     return np.array(X_processed), y
 
-# ==========================================
 # 2. FEATURE EXTRACTION
-# ==========================================
 def extract_color_histograms(images: np.ndarray, bins=(8, 8, 8)) -> np.ndarray:
     features = []
     for img in images:
@@ -145,28 +142,26 @@ class VisualBagOfWords:
             histograms.append(hist)
         return np.array(histograms)
 
-# ==========================================
 # 3. MAIN LOGIC (ARGPARSE)
-# ==========================================
 def main():
     parser = argparse.ArgumentParser(description="Image Classification Benchmarking Tool")
 
-    # --- Configuration Flags ---
+    # Configuration Flags 
     parser.add_argument("--dataset", type=str, required=True, choices=['GTSRB', 'CIFAR'], help="Dataset to use")
     parser.add_argument("--sample_frac", type=float, default=0.1, help="Fraction of data to use (0.0 - 1.0)")
     parser.add_argument("--models", nargs='+', default=['ALL'], 
                         choices=['RF_HIST', 'RF_SIFT', 'SVM_HIST', 'SVM_SIFT', 'ALL'],
                         help="List of models to run (e.g. --models RF_HIST SVM_SIFT)")
     
-    # --- Hyperparameters (RF) ---
+    # Hyperparameters (RF) 
     parser.add_argument("--n_estimators", type=int, default=100, help="RF: Number of trees")
     parser.add_argument("--max_depth", type=int, default=None, help="RF: Max depth of trees")
     
-    # --- Hyperparameters (SVM) ---
+    # Hyperparameters (SVM) 
     parser.add_argument("--C", type=float, default=1.0, help="SVM: Regularization parameter")
     parser.add_argument("--gamma", type=str, default='scale', help="SVM: Kernel coefficient (scale, auto, or float)")
 
-    # --- Result Output ---
+    # Result Output 
     parser.add_argument("--result", type=str, default='all', 
                         choices=['accuracy', 'precision', 'recall', 'f1', 'all'],
                         help="Metric to print out")
