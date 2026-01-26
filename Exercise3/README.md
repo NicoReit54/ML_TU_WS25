@@ -4,6 +4,7 @@ This directory contains the code and data for Exercise 3.2.1 - Image Classificat
 ## Project Structure
 ```
 Exercise3/
+│── google_drive_download.ipynb     # Python Notebook to download the GTSRB dataset from Google Drive as its too large for the submission
 │── data/
 │   ├── load_cifar.py               # Module for loading and preprocessing the CIFAR-10 dataset
 │   └── load_gtsrb.py               # Module for loading and preprocessing the GTSRB dataset
@@ -29,6 +30,10 @@ To run the code, you need to have Python >= 3.12.12 installed along with the req
 ```bash
 pip install -r requirements.txt
 ```
+## Downloading the GTSRB Dataset
+The GTSRB dataset is too large to be included directly in submission. You can download it using the provided `google_drive_download.ipynb` notebook by simply running it. It will put the GTSRB folder in its necessary structure into the data directory. 
+gdown and zipfile libraries are required, however they are anyhow already included in the requirements.txt file.
+
 
 ## Running the Shallow Model
 You can run the shallow learning evaluation (SVM and Random Forest with Histograms/SIFT) by executing the `shallow_client.py` script. Following parameters can be specified via command line arguments and only `--dataset` is required:
